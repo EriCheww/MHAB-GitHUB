@@ -50,3 +50,8 @@ The `detect_circle_v2` program looks for **`random_circle.png`** and instead of 
 | 6                | 45.0679 ms     |
 
 When running the .exe the performance is ~1ms 
+
+---
+
+### detect_circle_v3
+WIP getting 5ms from building and running and 1ms for running .exe 
