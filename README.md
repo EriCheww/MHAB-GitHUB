@@ -1,4 +1,4 @@
-<img width="320" height="240" alt="image" src="https://github.com/user-attachments/assets/3e8abc36-d3ff-48f0-811d-b875e42a74c3" /><img width="189" height="54" alt="image" src="https://github.com/user-attachments/assets/1b710981-7ad7-47bf-9739-c343c034c519" />## Fine Tracking
+## Fine Tracking
  
 ---
 
