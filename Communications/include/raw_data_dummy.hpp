@@ -6,8 +6,10 @@
 #include <cstddef>
 #include <string> 
 
+struct TelemetryPayloadDummy{ 
+    const std::string dummy_Data = "MHAB-THIS IS A TEST PAYLOAD";
+} ; 
 
-const std::string dummy_Data = "MHAB-THIS IS A TEST PAYLOAD";
 
 
 #endif

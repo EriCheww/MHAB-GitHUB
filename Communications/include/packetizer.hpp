@@ -8,6 +8,7 @@
 #include <vector>  //for std::vector 
 #include <cstddef> // for size_t 
 #include <cstring> // for memcpy
+#include <iostream> 
 
 #include <sodium.h> // The library we're gonna be using for encryption + authenthication
 
@@ -227,6 +228,7 @@ class Packetizer {
         }       
         header = static_cast<uint64_t>(frame[offset]) | (static_cast<uint64_t>(frame[offset + 1]) << 8) | (static_cast<uint64_t>(frame[offset+2])<<16) | (static_cast<uint64_t>(frame[offset+3])<<24)| (static_cast<uint64_t>(frame[offset+4])<<32)| (static_cast<uint64_t>(frame[offset+5])<<40)| (static_cast<uint64_t>(frame[offset+6])<<48)| (static_cast<uint64_t>(frame[offset+7])<<56) ;
         offset = offset + 8 ;
+
         return true ; 
     }
 
@@ -309,10 +311,15 @@ class Packetizer {
             return false ; 
         } 
 
+        //Final size check - 
+
+        const size_t expected = header_end + static_cast<size_t>(telemetry.payload_Length) + tag_length;
+        
+        if (frame.size() != expected) return false;
+
         //DECRYPTION AND AUTHENTICATE - 
         
         telemetry.payload_buffer.resize(telemetry.payload_Length) ; 
-
 
         int ret = crypto_aead_xchacha20poly1305_ietf_decrypt_detached(telemetry.payload_buffer.data(), nullptr, ciphertext.data() , 
             telemetry.payload_Length,telemetry.tag_auth.data(),temp_header.data(), temp_header.size(), Nonce.data(),key.data()
@@ -323,31 +330,14 @@ class Packetizer {
             return false;
         }
 
-        if (telemetry.sync0!=67) {
-            return false ; 
-        } 
-
-        if (telemetry.sync1!=8) {
-            return false ; 
-        } 
-
-        if (telemetry.protocol_Version!=1) {
-            return false ; 
-        } 
-
-        //pseudocode-ish since we don't have any actual data yet - 
-        //keep these empty fields they'll be used later - 
-        if (telemetry.record_Type==1) {} else if (telemetry.record_Type==4){} else if (telemetry.record_Type==6) {} else {
-            return false ; 
+        if (telemetry.record_Type==1) {} else if (telemetry.record_Type==4) {} else if (telemetry.record_Type==6) {}else {
+            return false;
         }
 
         return true ; 
 
 
     } 
-
-    // Deriving the nonce using the sequence number deterministically but still safely - 
-    //The direction bit will be given to the balloon and ground side specially for this, so that nonce, key pair can never repeat - 
 
 } ; 
 
