@@ -71,7 +71,7 @@ void TelemetryStep() {
         //Set record type (1 is for telemetry) - 
         packetizer_tx.telemetry.record_Type = 1 ; 
         //Encrypt and encode - 
-        if (!packetizer_tx.encode_and_encrypt(temp_payload, key, DIR_UPLINK)) return ; 
+        if (!packetizer_tx.encode_and_encrypt(temp_payload, key, DIR_DOWNLINK)) return ;  // I changed DIR_UPLINK to DIR_DOWNLINK since this is balloon side sending data downlink
         simulated_send_over_channel() ; 
         last_telemetry = current_time;
     }
