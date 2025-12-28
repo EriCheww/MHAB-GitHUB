@@ -19,6 +19,10 @@
 
 namespace fs = std::filesystem;
 
+
+
+
+
 //Start the global clock which we'll use to check against if 10 seconds has passed - 
 using Clock = std::chrono::steady_clock;
 static Clock::time_point last_telemetry = Clock::now() - std::chrono::seconds(10);
@@ -52,9 +56,30 @@ void simulated_receive_over_channel() {
 
 }
 
-void SendCommandACK() {
+void SendCommandACK(uint16_t cmd_seq, AckStatus status) {
+    std::vector<uint8_t> ack_payload;
+    ack_payload.reserve(3);
 
+    // payload format:[0..1] cmd_seq (little endian)  [2] status  (This is just an simple example, as I haven't finished simulated function yet. Jeff(12/28))
+    ack_payload.push_back(static_cast<uint8_t>(cmd_seq & 0xFF));
+    ack_payload.push_back(static_cast<uint8_t>((cmd_seq >> 8) & 0xFF));
+    ack_payload.push_back(static_cast<uint8_t>(status));
+
+    // record type for ACK
+    packetizer_tx.telemetry.record_Type = 4;
+
+    //allocate downlink packet seq 
+    packetizer_tx.telemetry.sequence_Number++;
+
+    //downlink direction (balloon -> ground)   (can changed back to DIR_UPLINK if ur assumption is the other way around)  Jeff(12/28)
+    if (!packetizer_tx.encode_and_encrypt(ack_payload, key, DIR_DOWNLINK)) {
+        return;
+    }
+
+    simulated_send_over_channel(); // ideally pass the produced frame bytes in
 }
+
+
 
 
 void TelemetryStep() {
