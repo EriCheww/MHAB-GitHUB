@@ -17,9 +17,39 @@
 #include "../../include/packet.hpp"
 #include "../../include/raw_data_dummy.hpp"
 
+
+
+// below 4 libs are for simulation 
+#include <optional>
+#include <deque>
+#include <mutex>
+#include <random>
+
+
+
+
+static constexpr size_t MAX_LORA_BYTES = 255;
+
+// Channel queue: frames "in the air"
+static std::mutex g_chan_mtx;
+static std::deque<std::vector<uint8_t>> g_chan_queue;
+
+// Error injection (default OFF)
+static double g_drop_prob = 0.0;      // e.g. 0.05 = 5% drop
+static double g_bitflip_prob = 0.0;   // e.g. 0.02 = 2% frames get 1 random bit flip
+
+static std::mt19937 rng{std::random_device{}()};
+
+
+
+
+
+
+
 namespace fs = std::filesystem;
 
 
+enum class AckStatus : uint8_t { OK = 0, ERROR = 1 };
 
 
 
@@ -48,35 +78,80 @@ std::vector<uint8_t> to_bytes(const std::string& s) {
 
 //This function simulates sending a frame by creating a buffer of 255 bytes to simulate a LoRa buffer, and then simulates bit flips / errors to simulate sending
 //Over the air - 
-void simulated_send_over_channel () {
 
+
+static void maybe_corrupt(std::vector<uint8_t>& frame) {
+    std::uniform_real_distribution<double> prob(0.0, 1.0);
+
+    // Drop is handled in send; here we do bit flip only.
+    if (g_bitflip_prob <= 0.0) return;
+    if (prob(rng) > g_bitflip_prob) return;
+
+    if (frame.empty()) return;
+
+    std::uniform_int_distribution<size_t> byte_dist(0, frame.size() - 1);
+    std::uniform_int_distribution<int> bit_dist(0, 7);
+
+    size_t i = byte_dist(rng);
+    int bit = bit_dist(rng);
+    frame[i] ^= static_cast<uint8_t>(1u << bit);  // flip one bit
 }
 
-void simulated_receive_over_channel() {
-
-}
-
-void SendCommandACK(uint16_t cmd_seq, AckStatus status) {
-    std::vector<uint8_t> ack_payload;
-    ack_payload.reserve(3);
-
-    // payload format:[0..1] cmd_seq (little endian)  [2] status  (This is just an simple example, as I haven't finished simulated function yet. Jeff(12/28))
-    ack_payload.push_back(static_cast<uint8_t>(cmd_seq & 0xFF));
-    ack_payload.push_back(static_cast<uint8_t>((cmd_seq >> 8) & 0xFF));
-    ack_payload.push_back(static_cast<uint8_t>(status));
-
-    // record type for ACK
-    packetizer_tx.telemetry.record_Type = 4;
-
-    //allocate downlink packet seq 
-    packetizer_tx.telemetry.sequence_Number++;
-
-    //downlink direction (balloon -> ground)   (can changed back to DIR_UPLINK if ur assumption is the other way around)  Jeff(12/28)
-    if (!packetizer_tx.encode_and_encrypt(ack_payload, key, DIR_DOWNLINK)) {
-        return;
+bool simulated_send_over_channel(const std::vector<uint8_t>& frame_in) {
+    if (frame_in.size() > MAX_LORA_BYTES) {
+        std::cerr << "[sim] frame too large for LoRa buffer: "
+                  << frame_in.size() << " > " << MAX_LORA_BYTES << "\n";
+        return false;
     }
 
-    simulated_send_over_channel(); // ideally pass the produced frame bytes in
+    std::uniform_real_distribution<double> prob(0.0, 1.0);
+    if (g_drop_prob > 0.0 && prob(rng) < g_drop_prob) {
+        std::cerr << "[sim] dropped a frame\n";
+        return true; // treat as "sent" but lost in air
+    }
+
+    std::vector<uint8_t> frame = frame_in;
+    maybe_corrupt(frame);
+
+    {
+        std::lock_guard<std::mutex> lock(g_chan_mtx);
+        g_chan_queue.push_back(std::move(frame));
+    }
+    return true;
+}
+
+
+// Simulated RadioReceiveNonBlocking(): returns empty if no frame available
+std::optional<std::vector<uint8_t>> simulated_receive_over_channel() {
+    std::lock_guard<std::mutex> lock(g_chan_mtx);
+    if (g_chan_queue.empty()) return std::nullopt;
+
+    std::vector<uint8_t> frame = std::move(g_chan_queue.front());
+    g_chan_queue.pop_front();
+    return frame;
+}
+
+
+
+
+
+
+
+
+void SendCommandACK(uint64_t cmd_seq, AckStatus status) {
+    std::vector<uint8_t> ack_payload;
+    ack_payload.reserve(9);
+
+    for (int i = 0; i < 8; ++i) {
+        ack_payload.push_back(static_cast<uint8_t>((cmd_seq >> (8*i)) & 0xFF));
+    }
+    ack_payload.push_back(static_cast<uint8_t>(status));
+
+    packetizer_tx.telemetry.record_Type = 4;
+    packetizer_tx.telemetry.sequence_Number++;
+
+    if (!packetizer_tx.encode_and_encrypt(ack_payload, key, DIR_DOWNLINK)) return;
+    simulated_send_over_channel(packetizer_tx.packet);
 }
 
 
@@ -96,64 +171,140 @@ void TelemetryStep() {
         //Set record type (1 is for telemetry) - 
         packetizer_tx.telemetry.record_Type = 1 ; 
         //Encrypt and encode - 
-        if (!packetizer_tx.encode_and_encrypt(temp_payload, key, DIR_UPLINK)) return ; 
-        simulated_send_over_channel() ; 
+        if (!packetizer_tx.encode_and_encrypt(temp_payload, key, DIR_DOWNLINK)) return ;  // I changed DIR_UPLINK to DIR_DOWNLINK since this is balloon side sending data downlink
+        simulated_send_over_channel(packetizer_tx.packet);
         last_telemetry = current_time;
     }
 }
 
 
-bool ReceiveCommandStep () {
-    //Pseudocode basically but I'll get back to this - 
-    if (simulated_receive_over_channel==nullptr) {
-        return false ; 
-    } else {
-        //Since this is a packet from ground we should use the opposite direction - 
-        if (!packetizer_rx.Decode(temp_payload, DIR_UPLINK, key)) return false ; 
+bool ReceiveCommandStep() {
+    // Non-blocking receive
+    auto frame_opt = simulated_receive_over_channel();
+    if (!frame_opt.has_value()) {
+        return false; // no frame this cycle
+    }
+    const std::vector<uint8_t>& rx_frame = *frame_opt;
+
+    // Decode + authenticate (uplink: ground -> balloon)
+    if (!packetizer_rx.Decode(rx_frame, DIR_UPLINK, key)) {
+        return false; // corrupted / auth failed / malformed
     }
 
-    // Our packetizer function already does integrity checks so should automatically drop the packet upon detection of bit flips - 
-    //Same with length checks and this also feeds into the fact that if there were length changes it would fail ythe integrity check anyways - we also do length checks during 
-    // ... encoding so that base is covered too -  
-
-    //skipping command checks for whether it's valid or invalid since we don't have any actual commands to test with - 
-    // Assumption is that teammate will cover the ground side here - 
-
+    // Basic protocol sanity checks
     if (packetizer_rx.telemetry.protocol_Version != 1) return false;
+    if (packetizer_rx.telemetry.sync0 != 67) return false;
+    if (packetizer_rx.telemetry.sync1 != 8)  return false;
 
-    if (packetizer_rx.telemetry.sync0!=67) {
-        return false ; 
-    } 
+ 
+    // return true: valid COMMAND received and handled
+    // return false: no frame / invalid frame / or valid non-command (telemetry/ack)
+    const uint8_t rt = packetizer_rx.telemetry.record_Type;
 
-    if (packetizer_rx.telemetry.sync1!=8) {
-        return false ; 
-    } 
-
-    //pseudocode-ish since we don't have any actual data yet - 
-    //keep these empty fields they'll be used later - 
-    //1 is for payload data , 4 is for ACK's and 6 is for commands -
-    if (packetizer_rx.telemetry.record_Type==1) {} else if (packetizer_rx.telemetry.record_Type==4){
-    } else if (packetizer_rx.telemetry.record_Type==6) {
-        if (packetizer_rx.telemetry.payload_buffer.size() < 2) return false;
-        //If record type 6 do this action - 
-        //Example commands - prints out in the console since we don't have any hardware to forward commands to - 
-        //Using SunByte's model for recognizing commands - 
-        if (packetizer_rx.telemetry.payload_buffer[0]==0xa2 && packetizer_rx.telemetry.payload_buffer[1]==0x08) {
-            std::cout << "Recalibrating the telescope" << std::endl ;  
-        } else if (packetizer_rx.telemetry.payload_buffer[0]==0xa3 && packetizer_rx.telemetry.payload_buffer[1]==0x09) {
-            std::cout << "Prepare for shutdown" << std::endl ;  
-        }  else if (packetizer_rx.telemetry.payload_buffer[0]==0xa4 && packetizer_rx.telemetry.payload_buffer[1]==0x10) {
-            std::cout << "Reset the stepper motor" << std::endl ;  
-        }   else  {
-            std::cout << "Invalid Command" << std::endl ;
-            //here we need to send an ACK back down now - 
-            SendCommandACK() ; 
-        }    
-    } else {
-        return false ; 
+    if (rt == 1) {
+        // Telemetry (not expected on balloon uplink, but ignore safely)
+        return false;
     }
 
+    if (rt == 4) {
+        // ACK (not a command)
+        return false;
+    }
+
+    if (rt != 6) {
+        // Unknown/unsupported record type
+        return false;
+    }
+
+    // rt == 6 : Command
+    // NOTE: telemetry.payload_buffer holds decrypted payload after Decode()
+    if (packetizer_rx.telemetry.payload_buffer.size() < 2) {
+        // invalid command payload
+        SendCommandACK(packetizer_rx.telemetry.sequence_Number, AckStatus::ERROR);
+        return true; // we did receive a command-type packet and handled it (error path)
+    }
+
+    const uint8_t c0 = packetizer_rx.telemetry.payload_buffer[0];
+    const uint8_t c1 = packetizer_rx.telemetry.payload_buffer[1];
+
+    // Example commands (placeholder)
+    if (c0 == 0xA2 && c1 == 0x08) {
+        std::cout << "Recalibrating the telescope" << std::endl;
+        // Optionally: SendCommandACK(packetizer_rx.telemetry.sequence_Number, AckStatus::OK);
+        return true;
+    }
+
+    if (c0 == 0xA3 && c1 == 0x09) {
+        std::cout << "Prepare for shutdown" << std::endl;
+        // Optionally: SendCommandACK(packetizer_rx.telemetry.sequence_Number, AckStatus::OK);
+        return true;
+    }
+
+    if (c0 == 0xA4 && c1 == 0x10) {
+        std::cout << "Reset the stepper motor" << std::endl;
+        // Optionally: SendCommandACK(packetizer_rx.telemetry.sequence_Number, AckStatus::OK);
+        return true;
+    }
+
+    // Invalid / unsupported command
+    std::cout << "Invalid Command" << std::endl;
+    SendCommandACK(packetizer_rx.telemetry.sequence_Number, AckStatus::ERROR);
+    return true;
 }
+
+// bool ReceiveCommandStep () {
+//     auto frame_opt = simulated_receive_over_channel();
+//     if (!frame_opt.has_value()) {
+//         return false; // no frame this cycle (non-blocking)
+//     }
+//     const std::vector<uint8_t>& rx_frame = *frame_opt;
+
+//     // decode rx_frame (NOT temp_payload)
+//     if (!packetizer_rx.Decode(rx_frame, DIR_UPLINK, key)) return false;
+    
+    
+//     // Our packetizer function already does integrity checks so should automatically drop the packet upon detection of bit flips - 
+//     //Same with length checks and this also feeds into the fact that if there were length changes it would fail ythe integrity check anyways - we also do length checks during 
+//     // ... encoding so that base is covered too -  
+
+//     //skipping command checks for whether it's valid or invalid since we don't have any actual commands to test with - 
+//     // Assumption is that teammate will cover the ground side here - 
+
+//     if (packetizer_rx.telemetry.protocol_Version != 1) return false;
+
+//     if (packetizer_rx.telemetry.sync0!=67) {
+//         return false ; 
+//     } 
+
+//     if (packetizer_rx.telemetry.sync1!=8) {
+//         return false ; 
+//     } 
+
+//     //pseudocode-ish since we don't have any actual data yet - 
+//     //keep these empty fields they'll be used later - 
+//     //1 is for payload data , 4 is for ACK's and 6 is for commands -
+//     if (packetizer_rx.telemetry.record_Type==1) {} else if (packetizer_rx.telemetry.record_Type==4){
+//     } else if (packetizer_rx.telemetry.record_Type==6) {
+//         if (packetizer_rx.telemetry.payload_buffer.size() < 2) return false;
+//         //If record type 6 do this action - 
+//         //Example commands - prints out in the console since we don't have any hardware to forward commands to - 
+//         //Using SunByte's model for recognizing commands - 
+//         if (packetizer_rx.telemetry.payload_buffer[0]==0xa2 && packetizer_rx.telemetry.payload_buffer[1]==0x08) {
+//             std::cout << "Recalibrating the telescope" << std::endl ;  
+//         } else if (packetizer_rx.telemetry.payload_buffer[0]==0xa3 && packetizer_rx.telemetry.payload_buffer[1]==0x09) {
+//             std::cout << "Prepare for shutdown" << std::endl ;  
+//         }  else if (packetizer_rx.telemetry.payload_buffer[0]==0xa4 && packetizer_rx.telemetry.payload_buffer[1]==0x10) {
+//             std::cout << "Reset the stepper motor" << std::endl ;  
+//         }   else  {
+//             std::cout << "Invalid Command" << std::endl ;
+//             //here we need to send an ACK back down now - 
+//             SendCommandACK(packetizer_rx.telemetry.sequence_Number, AckStatus::ERROR);
+//         }    
+//     } else {
+//         return false ; 
+//     }
+
+// }
 
 int main() {
 
