@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     cout << "-------Image Size Area-------\n";
     cout << "minArea = " << minArea << "\nmaxArea = " << maxArea << "\n\n";
 
-    // Combine only contours within the area range
+    // Loop over each contour and conbine the points of each that are within the allowable area
     vector<Point> combinedPoints;
     for (vector<Point> &contour : contours) {
         double area = contourArea(contour);
