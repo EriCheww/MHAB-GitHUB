@@ -74,6 +74,30 @@ static std::optional<std::vector<uint8_t>> simulated_receive_over_channel() {
 }
 
 
+
+
+
+
+
+static constexpr int MAX_CMD_RETRIES = 3;  // number of re-transmits after the first send
+static constexpr auto CMD_ACK_TIMEOUT = std::chrono::milliseconds(800); // wait before retry
+
+static void mark_command_timeout(PendingCommand& cmd) {
+    cmd.status = PendingCommand::Status::DONE;
+    cmd.result = PendingCommand::Result::TIMEOUT;
+    std::cout << "[cmd] TIMEOUT cmd_seq=" << cmd.cmd_seq << "\n";
+}
+
+
+
+
+
+
+
+
+
+
+
 // Direction bits (must match balloon side)
 
 static constexpr uint8_t DIR_UPLINK   = 1; // ground -> balloon
@@ -106,9 +130,143 @@ static std::vector<PendingCommand> g_pending_commands;
 
 
 
-static void ReceiveDownlinkStep();
+// ReceiveDownlinkStep()
+// (non-blocking, handle TELEMETRY and ACK frames from balloon -> ground)
+static void ReceiveDownlinkStep() {
+    auto frame_opt = simulated_receive_over_channel();
+    if (!frame_opt.has_value()) return; // non-blocking: nothing received
+
+    const std::vector<uint8_t>& rx_frame = *frame_opt;
+
+    // Downlink direction: balloon -> ground
+    if (!packetizer_rx.Decode(rx_frame, DIR_DOWNLINK, g_key)) {
+        g_link_stats.drop_count++;
+        std::cerr << "[rx] drop frame (decode/auth failed)\n";
+        return;
+    }
+
+    // Sanity checks (keep cheap & strict)
+    if (packetizer_rx.telemetry.protocol_Version != 1) return;
+    if (packetizer_rx.telemetry.sync0 != 67) return;
+    if (packetizer_rx.telemetry.sync1 != 8)  return;
+
+    g_link_stats.last_rx_time = Clock::now();
+    g_link_stats.last_rx_seq  = packetizer_rx.telemetry.sequence_Number;
+
+    const uint8_t rt = packetizer_rx.telemetry.record_Type;
+
+    // ---------------- Telemetry ----------------
+    if (rt == 1) {
+        g_link_stats.telemetry_count++;
+        g_link_stats.last_telemetry_time = Clock::now();
+
+        // For now we treat telemetry payload as a string (your dummy payload is a string)
+        const std::string payload_str = bytes_to_string(packetizer_rx.telemetry.payload_buffer);
+
+        std::cout << "[telemetry] seq=" << packetizer_rx.telemetry.sequence_Number
+                  << " bytes=" << packetizer_rx.telemetry.payload_buffer.size()
+                  << " payload=\"" << payload_str << "\"\n";
+
+        // TODO (later):
+        // - parse telemetry fields (GPS, alt, battery...)
+        // - log to file (CSV/JSON)
+        // - update GUI plots
+        return;
+    }
+
+    //ACK
+    if (rt == 4) {
+        g_link_stats.ack_count++;
+
+        uint64_t cmd_seq = 0;
+        AckStatus st = AckStatus::ERROR;
+
+        if (!parse_ack_payload(packetizer_rx.telemetry.payload_buffer, cmd_seq, st)) {
+            std::cerr << "[ack] invalid payload format (bytes="
+                      << packetizer_rx.telemetry.payload_buffer.size() << ")\n";
+            return;
+        }
+
+        std::cout << "[ack] downlink_seq=" << packetizer_rx.telemetry.sequence_Number
+                  << " cmd_seq=" << cmd_seq
+                  << " status=" << (st == AckStatus::OK ? "OK" : "ERROR")
+                  << "\n";
+
+        // Update pending command state machine (Algorithm 6 will extend retries/timeouts)
+        mark_command_done(cmd_seq, st);
+        return;
+    }
+
+    // Unknown record type 
+    std::cout << "[rx] ignore unsupported record_Type=" << static_cast<int>(rt)
+              << " seq=" << packetizer_rx.telemetry.sequence_Number << "\n";
+}
+
 static void PollGuiAndQueueCommands();
-static void SendPendingCommandsStep();
+static void SendPendingCommandsStep() {
+    const auto now = Clock::now();
+
+    for (auto& cmd : g_pending_commands) {
+
+        // DONE: do nothing (ACK already received OR timed out)
+        if (cmd.status == PendingCommand::Status::DONE) {
+            continue;
+        }
+
+        // NEW: send immediately once
+        if (cmd.status == PendingCommand::Status::NEW) {
+
+            // If retries_left wasn't initialized by queue logic, set it here safely
+            if (cmd.retries_left <= 0) {
+                cmd.retries_left = MAX_CMD_RETRIES;
+            }
+
+            if (!simulated_send_over_channel(cmd.frame)) {
+                std::cerr << "[tx] failed to send command cmd_seq=" << cmd.cmd_seq << "\n";
+                // You can choose to keep it NEW or mark as timeout/error; we keep it NEW for now.
+                continue;
+            }
+
+            cmd.last_tx_time = now;
+            cmd.status = PendingCommand::Status::WAITING_ACK;
+
+            std::cout << "[tx] sent command cmd_seq=" << cmd.cmd_seq
+                      << " (retries_left=" << cmd.retries_left << ")\n";
+            continue;
+        }
+
+        // WAITING_ACK: check timeout
+        if (cmd.status == PendingCommand::Status::WAITING_ACK) {
+
+            const auto elapsed = now - cmd.last_tx_time;
+
+            // Not timed out yet: keep waiting
+            if (elapsed < CMD_ACK_TIMEOUT) {
+                continue;
+            }
+
+            // Timed out: either retry or finish as TIMEOUT
+            if (cmd.retries_left > 0) {
+                cmd.retries_left--;
+
+                if (!simulated_send_over_channel(cmd.frame)) {
+                    std::cerr << "[tx] retry send failed cmd_seq=" << cmd.cmd_seq << "\n";
+                    // If send fails, you could choose to not decrement retries, but we already did.
+                    // Keeping logic simple: we still wait again.
+                } else {
+                    std::cout << "[tx] RETRY cmd_seq=" << cmd.cmd_seq
+                              << " (retries_left=" << cmd.retries_left << ")\n";
+                }
+
+                cmd.last_tx_time = now;          // reset the timer regardless
+                cmd.status = PendingCommand::Status::WAITING_ACK;
+            } else {
+                // no retries left => DONE/TIMEOUT
+                mark_command_timeout(cmd);
+            }
+        }
+    }
+}
 static void UpdateUI();
 
 
