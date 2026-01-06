@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
 
     // Use minEnclosingCircle on filtered points
     Point2f center;
-    double radius;
+    float radius;
     minEnclosingCircle(combinedPoints, center, radius);
 
     // End timer and calculate the duration
