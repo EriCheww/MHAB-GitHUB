@@ -50,9 +50,9 @@ int main(int argc, char** argv) {
     cvtColor(processedImg, hsv, COLOR_BGR2HSV);
 
     // Orange colour range (adjust if needed)
-    Scalar lower_orange(5, 50, 50); 
-    Scalar upper_orange(25, 255, 255);
-    inRange(hsv, lower_orange, upper_orange, mask);
+    Scalar lowerOrange(5, 50, 50); 
+    Scalar upperOrange(25, 255, 255);
+    inRange(hsv, lowerOrange, upperOrange, mask);
 
     // Find contours
     vector<vector<Point>> contours;
