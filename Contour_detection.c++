@@ -81,9 +81,8 @@ int main(int argc, char** argv) {
     double oldWidth = 980.0;
     double oldHeight = 732.0;
 
-    // Area multiplier
+    // Adjust as needed, this is just how I came about to getting about 2% as the minimum area. Any other constant could work here
     double minAreaFraction = oldMinArea / (oldWidth * oldHeight);
-    // Adjust as needed, max area is not that important
     double maxAreaFraction = 0.5;
 
     // Current image resolution areas
