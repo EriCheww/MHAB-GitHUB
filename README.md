@@ -53,8 +53,8 @@ Load key file
 
 Warnings for invalid key length or frequent decrypt/auth failures (possible key mismatch)
 
-6) Alerts & Fault Handling
+### 6) Alerts & Fault Handling
 
-Alerts panel (e.g., telemetry timeout, ACK timeout, repeated auth failures, low battery)
+Alerts panel (telemetry timeout, ACK timeout, repeated auth failures, low battery...etc.)
 
 Acknowledge/clear alerts
