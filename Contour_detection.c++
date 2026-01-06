@@ -83,7 +83,8 @@ int main(int argc, char** argv) {
 
     // Area multiplier
     double minAreaFraction = oldMinArea / (oldWidth * oldHeight);
-    double maxAreaFraction = 0.1;
+    // Adjust as needed, max area is not that important
+    double maxAreaFraction = 0.5;
 
     // Current image resolution areas
     double imgArea = processedImg.cols * processedImg.rows;
