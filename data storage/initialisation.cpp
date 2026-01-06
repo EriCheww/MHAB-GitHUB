@@ -3,8 +3,7 @@
 // Step 1: Program start / Initialisation
 // Sets up directories, opens the SQLite3 database, configures the camera (stubbed), 
 // and launches the capture, writer, and DB threads.
-// ---- SQLite STUB (local testing only) ----
-// ---- SQLite STUB (local testing only) ----
+
 
 
 
