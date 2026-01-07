@@ -1,0 +1,1565 @@
+[
+    {
+        "id": "ebf5a8a51a479aee",
+        "type": "tab",
+        "label": "流程1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "b22a16f1eabb8374",
+        "type": "inject",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 250,
+        "y": 140,
+        "wires": [
+            [
+                "dec5b3e2c6b47ca1"
+            ]
+        ]
+    },
+    {
+        "id": "581a54ea8bc1fe06",
+        "type": "debug",
+        "z": "ebf5a8a51a479aee",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "dec5b3e2c6b47ca1",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function 1",
+        "func": "// Create a mock MHAB telemetry packet (JSON)\nconst now = new Date();\n\nmsg.payload = {\n    type: \"telemetry\",\n    seq: (msg.seq || 0) + 1,\n    ts: now.toISOString(),\n    payload_len: 84,\n\n    battery_v: 7.91,\n    temps_c: [\n        { id: \"pi\", name: \"Raspberry Pi\", value: 41.2 },\n        { id: \"payload\", name: \"Payload Bay\", value: 18.7 },\n        { id: \"gps\", name: \"GPS Module\", value: 22.3 }\n    ],\n\n\n    lat: -37.9100,\n    lon: 145.1300,\n    alt_m: 18250,\n\n    snr_db: 7.5,\n    rssi_dbm: -112,\n\n    fault_flags: 0\n};\n\n// keep a simple counter across clicks\nmsg.seq = msg.payload.seq;\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 140,
+        "wires": [
+            [
+                "581a54ea8bc1fe06",
+                "5518dc866d565758",
+                "d7c00fc1cee0dd0b",
+                "dfe1d709803101d8"
+            ]
+        ]
+    },
+    {
+        "id": "ec47963673a9fefc",
+        "type": "ui-gauge",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "group": "dbe9b5b0d3cbff0f",
+        "order": 1,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Battery (V)",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "units",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "4",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "7",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": 10,
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 850,
+        "y": 240,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5518dc866d565758",
+        "type": "change",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.battery_v",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 240,
+        "wires": [
+            [
+                "ec47963673a9fefc"
+            ]
+        ]
+    },
+    {
+        "id": "663f4ca0fe305f12",
+        "type": "ui-text",
+        "z": "ebf5a8a51a479aee",
+        "group": "b958611408cc2f87",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": true,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 830,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "d7c00fc1cee0dd0b",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "format summary (function)",
+        "func": "const p = msg.payload;\nmsg.payload = `Seq: ${p.seq}<br>Time: ${p.ts}<br>Len: ${p.payload_len} bytes`;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 40,
+        "wires": [
+            [
+                "663f4ca0fe305f12"
+            ]
+        ]
+    },
+    {
+        "id": "74f3c58a64efc78f",
+        "type": "ui-table",
+        "z": "ebf5a8a51a479aee",
+        "group": "9a508456c559f490",
+        "name": "",
+        "label": "Temperatures (°C)",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": true,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 790,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dfe1d709803101d8",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "format temps(function)",
+        "func": "const temps = (msg.payload && msg.payload.temps_c) ? msg.payload.temps_c : [];\n\n// Dashboard table expects an array of row objects in msg.payload\nmsg.payload = temps.map(t => ({\n    Sensor: t.name ?? t.id,\n    \"Temp (°C)\": t.value\n}));\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 280,
+        "wires": [
+            [
+                "74f3c58a64efc78f",
+                "72962bc5d50a6e89"
+            ]
+        ]
+    },
+    {
+        "id": "72962bc5d50a6e89",
+        "type": "debug",
+        "z": "ebf5a8a51a479aee",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "28e32575af3c4362",
+        "type": "http request",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/api/command",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 690,
+        "y": 420,
+        "wires": [
+            [
+                "10a6f32f98483fe4",
+                "d4f9ccc207532e58",
+                "7d7236b37a42831c"
+            ]
+        ]
+    },
+    {
+        "id": "445ad0c7372ec22e",
+        "type": "ui-button",
+        "z": "ebf5a8a51a479aee",
+        "group": "212c5b96d5d840fe",
+        "name": "ui-button (Shutdown)",
+        "label": "Shutdown",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 180,
+        "y": 420,
+        "wires": [
+            [
+                "963bbede6f0d7521"
+            ]
+        ]
+    },
+    {
+        "id": "963bbede6f0d7521",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(build JSON)",
+        "func": "msg._cmd = \"shutdown\";\n\n\nmsg.headers = { \"Content-Type\": \"application/json\" };\n\nmsg.payload = {\n    cmd: \"shutdown\",\n    params: {},\n    critical: true\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 420,
+        "wires": [
+            [
+                "28e32575af3c4362"
+            ]
+        ]
+    },
+    {
+        "id": "10a6f32f98483fe4",
+        "type": "debug",
+        "z": "ebf5a8a51a479aee",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "e13fa5f07d3da0d8",
+        "type": "http in",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "url": "/api/command",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 230,
+        "y": 480,
+        "wires": [
+            [
+                "112630f05a18b0ed"
+            ]
+        ]
+    },
+    {
+        "id": "112630f05a18b0ed",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(reply)",
+        "func": "// msg.payload is the parsed JSON body\nconst cmd = msg.payload?.cmd ?? \"unknown\";\n\n// fake cmd sequence\nglobal.set(\"cmd_seq\", (global.get(\"cmd_seq\") || 0) + 1);\n\nmsg.payload = {\n  ok: true,\n  cmd_seq: global.get(\"cmd_seq\"),\n  status: \"QUEUED\",\n  received_cmd: cmd\n};\n\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 480,
+        "wires": [
+            [
+                "5a546ba0d5441c3b"
+            ]
+        ]
+    },
+    {
+        "id": "5a546ba0d5441c3b",
+        "type": "http response",
+        "z": "ebf5a8a51a479aee",
+        "name": "http response",
+        "statusCode": "200",
+        "headers": {},
+        "x": 680,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "d4f9ccc207532e58",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(format status)",
+        "func": "const r = msg.payload || {};\nmsg.payload = `Result: ${r.ok ? \"OK\" : \"ERROR\"} | cmd_seq: ${r.cmd_seq} | status: ${r.status} | cmd: ${r.received_cmd}`;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 500,
+        "wires": [
+            [
+                "b650c40b5677515d"
+            ]
+        ]
+    },
+    {
+        "id": "b650c40b5677515d",
+        "type": "ui-text",
+        "z": "ebf5a8a51a479aee",
+        "group": "212c5b96d5d840fe",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "text",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": true,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 1110,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "9f562156a449e38e",
+        "type": "ui-table",
+        "z": "ebf5a8a51a479aee",
+        "group": "f7785d1bfe70bf9b",
+        "name": "",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": true,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 1070,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7d7236b37a42831c",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "append history",
+        "func": "const res = msg.payload || {};\nconst cmd = msg._cmd || res.received_cmd || \"unknown\";\n\nconst row = {\n    Time: new Date().toLocaleString(),\n    Command: cmd,\n    CmdSeq: res.cmd_seq ?? \"\",\n    Status: res.status ?? \"\",\n    Result: (res.ok ? \"OK\" : \"ERROR\")\n};\n\nlet hist = flow.get(\"cmd_history\") || [];\nhist.unshift(row);          // newest first\nhist = hist.slice(0, 20);   // keep last 20\nflow.set(\"cmd_history\", hist);\n\nmsg.payload = hist;         // table expects array of row objects\nreturn msg;\n// const N = 50; // keep latest 50\n\n// let hist = flow.get(\"cmd_history\") || [];\n\n// // if you're currently pushing to the end, you can keep it,\n// // but usually newest-at-top is nicer:\n// hist.unshift(msg.payload);   // put newest first\n// hist = hist.slice(0, N);\n\n// flow.set(\"cmd_history\", hist);\n\n// msg.payload = hist;\n// return msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 360,
+        "wires": [
+            [
+                "9f562156a449e38e"
+            ]
+        ]
+    },
+    {
+        "id": "f849aed4a7d456fd",
+        "type": "ui-table",
+        "z": "ebf5a8a51a479aee",
+        "group": "6064a4dd27885d05",
+        "name": "",
+        "label": "",
+        "order": "1",
+        "width": 0,
+        "height": 0,
+        "maxrows": "20",
+        "passthru": false,
+        "autocols": true,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [
+            {
+                "title": "cmd_seq",
+                "key": "cmd_seq",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "cmd",
+                "key": "cmd",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "state",
+                "key": "state",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "retries_left",
+                "key": "retries_left",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "timeout_remaining_s",
+                "key": "timeout_remaining_s",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            },
+            {
+                "title": "last_tx_time",
+                "key": "last_tx_time",
+                "keyType": "key",
+                "type": "text",
+                "width": "",
+                "align": "start"
+            }
+        ],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 1190,
+        "y": 580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dacc780666c1366d",
+        "type": "inject",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 250,
+        "y": 580,
+        "wires": [
+            [
+                "4d4e47e98fe6c5e5"
+            ]
+        ]
+    },
+    {
+        "id": "81a16544a4f586b8",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(format pending)",
+        "func": "const arr = Array.isArray(msg.payload) ? msg.payload : [];\n\nmsg.payload = arr.map(p => ({\n    CmdSeq: p.cmd_seq,\n    Command: p.cmd,\n    State: p.state,\n    RetriesLeft: p.retries_left,\n    TimeoutRemain_s: p.timeout_remaining_s,\n    Timeout_s: p.timeout_s,\n    LastTx: p.last_tx_time\n}));\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 970,
+        "y": 580,
+        "wires": [
+            [
+                "f849aed4a7d456fd",
+                "cf2dc7c470e85cc3"
+            ]
+        ]
+    },
+    {
+        "id": "4d4e47e98fe6c5e5",
+        "type": "http request",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/api/pending",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 470,
+        "y": 580,
+        "wires": [
+            [
+                "0e69a908778b2a84",
+                "a88953f40006ef0a",
+                "509fc6edcbd29f9d"
+            ]
+        ]
+    },
+    {
+        "id": "0e69a908778b2a84",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(sort+decorate)",
+        "func": "// // msg.payload is an array\n// let rows = msg.payload || [];\n\n// // sort: TIMEOUT first, then RETRYING, then WAITING_ACK\n// const prio = { \"TIMEOUT\": 0, \"RETRYING\": 1, \"WAITING_ACK\": 2 };\n// rows.sort((a,b) => (prio[a.state] ?? 9) - (prio[b.state] ?? 9) || b.cmd_seq - a.cmd_seq);\n// rows = rows.slice(0, 20);   \n\n\n// msg.payload = rows;\n// return msg;\n// // add a display field (optional)\n// rows = rows.map(r => ({\n//     ...r,\n//     state_display: r.state\n// }));\n\n// msg.payload = rows;\n// return msg;\nconst N = 20; // keep latest 20\n\nlet rows = Array.isArray(msg.payload) ? msg.payload : [];\n\n// newest first\nrows.sort((a,b) => (b.cmd_seq ?? 0) - (a.cmd_seq ?? 0));\n\n// keep only latest N\nrows = rows.slice(0, N);\n\nmsg.payload = rows;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 580,
+        "wires": [
+            [
+                "81a16544a4f586b8"
+            ]
+        ]
+    },
+    {
+        "id": "a88953f40006ef0a",
+        "type": "debug",
+        "z": "ebf5a8a51a479aee",
+        "name": "debug 4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "cf2dc7c470e85cc3",
+        "type": "debug",
+        "z": "ebf5a8a51a479aee",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1160,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "509fc6edcbd29f9d",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function 2",
+        "func": "// Ensure payload is always an array\nif (!Array.isArray(msg.payload)) {\n  msg.payload = [msg.payload];\n}\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "68571617c722b07b",
+        "type": "ui-button",
+        "z": "ebf5a8a51a479aee",
+        "group": "6064a4dd27885d05",
+        "name": "Reset",
+        "label": "Reset",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "restart_alt",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 250,
+        "y": 800,
+        "wires": [
+            [
+                "fae384290c7edab2"
+            ]
+        ]
+    },
+    {
+        "id": "fae384290c7edab2",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "build reset request ",
+        "func": "msg.method = \"POST\";\nmsg.url = \"http://127.0.0.1:5000/api/reset\";\nmsg.payload = {};   // empty body is fine\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 800,
+        "wires": [
+            [
+                "deed73f649a438dc"
+            ]
+        ]
+    },
+    {
+        "id": "deed73f649a438dc",
+        "type": "http request",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/api/reset",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 670,
+        "y": 800,
+        "wires": [
+            [
+                "a772998bd93826c7",
+                "b6a6445a37bb127c"
+            ]
+        ]
+    },
+    {
+        "id": "a772998bd93826c7",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function (clear UI + history)",
+        "func": "// clear stored history (if you use flow context to store history)\nflow.set(\"cmd_history\", []);\n\n// clear UI tables: send empty array\nmsg.payload = [];\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 720,
+        "wires": [
+            [
+                "f849aed4a7d456fd",
+                "9f562156a449e38e"
+            ]
+        ]
+    },
+    {
+        "id": "b6a6445a37bb127c",
+        "type": "debug",
+        "z": "ebf5a8a51a479aee",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "863aa2f82b9e8e39",
+        "type": "ui-button",
+        "z": "ebf5a8a51a479aee",
+        "group": "6aa2b3a71ba47db6",
+        "name": "Connect",
+        "label": "button",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 300,
+        "y": 960,
+        "wires": [
+            [
+                "9129e9191d15adf1"
+            ]
+        ]
+    },
+    {
+        "id": "f3e25ab624253883",
+        "type": "ui-button",
+        "z": "ebf5a8a51a479aee",
+        "group": "6aa2b3a71ba47db6",
+        "name": "Disconnect",
+        "label": "button",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 330,
+        "y": 1060,
+        "wires": [
+            [
+                "9488b482cd013578"
+            ]
+        ]
+    },
+    {
+        "id": "8b43be88e99637a5",
+        "type": "ui-text",
+        "z": "ebf5a8a51a479aee",
+        "group": "6aa2b3a71ba47db6",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Link Status",
+        "label": "text",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 1330,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "9129e9191d15adf1",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(build connect req)",
+        "func": "\nmsg.payload = {};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 540,
+        "y": 960,
+        "wires": [
+            [
+                "b136c6851ce986c0"
+            ]
+        ]
+    },
+    {
+        "id": "b136c6851ce986c0",
+        "type": "http request",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/api/radio/connect",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 850,
+        "y": 960,
+        "wires": [
+            [
+                "b5760518d779e2e1"
+            ]
+        ]
+    },
+    {
+        "id": "b5760518d779e2e1",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(format link status)",
+        "func": "const c = msg.payload?.connected;\nconst tx = msg.payload?.last_tx_time || \"-\";\nconst rx = msg.payload?.last_rx_time || \"-\";\n\nmsg.payload = c\n  ? `🟢 Connected | TX: ${tx} | RX: ${rx}`\n  : `🔴 Disconnected | TX: ${tx} | RX: ${rx}`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1100,
+        "y": 1020,
+        "wires": [
+            [
+                "8b43be88e99637a5"
+            ]
+        ]
+    },
+    {
+        "id": "9488b482cd013578",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(build disconnect req)",
+        "func": "\nmsg.payload = {};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 1060,
+        "wires": [
+            [
+                "97c228c1637c0102"
+            ]
+        ]
+    },
+    {
+        "id": "97c228c1637c0102",
+        "type": "http request",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/api/radio/disconnect",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 810,
+        "y": 1060,
+        "wires": [
+            [
+                "b5760518d779e2e1"
+            ]
+        ]
+    },
+    {
+        "id": "f8f2e5ab2d837944",
+        "type": "inject",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 350,
+        "y": 1160,
+        "wires": [
+            [
+                "eefbf4dfbb90f238"
+            ]
+        ]
+    },
+    {
+        "id": "eefbf4dfbb90f238",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "function(build status req)",
+        "func": "\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 1160,
+        "wires": [
+            [
+                "643cdb4b30412217"
+            ]
+        ]
+    },
+    {
+        "id": "643cdb4b30412217",
+        "type": "http request",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/api/radio/status",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 850,
+        "y": 1160,
+        "wires": [
+            [
+                "b5760518d779e2e1"
+            ]
+        ]
+    },
+    {
+        "id": "331884f7ac7c9b83",
+        "type": "ui-text",
+        "z": "ebf5a8a51a479aee",
+        "group": "6094c7562f963862",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "name": "RSSI",
+        "label": "RSSI",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 1150,
+        "y": 1420,
+        "wires": []
+    },
+    {
+        "id": "94f739724d3d616b",
+        "type": "ui-text",
+        "z": "ebf5a8a51a479aee",
+        "group": "6094c7562f963862",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "name": "SNR",
+        "label": "SNR",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 1150,
+        "y": 1460,
+        "wires": []
+    },
+    {
+        "id": "497096177f76b23a",
+        "type": "ui-text",
+        "z": "ebf5a8a51a479aee",
+        "group": "6094c7562f963862",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "name": "Pkts/min",
+        "label": "Pkts/min",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 1160,
+        "y": 1540,
+        "wires": []
+    },
+    {
+        "id": "45df56dd98cfee40",
+        "type": "ui-text",
+        "z": "ebf5a8a51a479aee",
+        "group": "6094c7562f963862",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Last RX",
+        "label": "Last RX",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 1160,
+        "y": 1500,
+        "wires": []
+    },
+    {
+        "id": "87e7006ae37931f6",
+        "type": "ui-gauge",
+        "z": "ebf5a8a51a479aee",
+        "name": "RSSI gauge",
+        "group": "6094c7562f963862",
+        "order": 0,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "gauge",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "units",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "4",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "7",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": 10,
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1170,
+        "y": 1580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1901af194db9a7db",
+        "type": "inject",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 430,
+        "y": 1500,
+        "wires": [
+            [
+                "a6e73c0e3cd89a2a"
+            ]
+        ]
+    },
+    {
+        "id": "a6e73c0e3cd89a2a",
+        "type": "http request",
+        "z": "ebf5a8a51a479aee",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://127.0.0.1:5000/api/radio/metrics",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 670,
+        "y": 1500,
+        "wires": [
+            [
+                "b64a59d4b371566e"
+            ]
+        ]
+    },
+    {
+        "id": "b64a59d4b371566e",
+        "type": "function",
+        "z": "ebf5a8a51a479aee",
+        "name": "fanout metrics",
+        "func": "const m = msg.payload || {};\n\nconst rssi = (typeof m.rssi_dbm === \"number\") ? m.rssi_dbm : null;\nconst snr = (typeof m.snr_db === \"number\") ? m.snr_db : null;\nconst last = (m.last_rx_time && String(m.last_rx_time).length > 0) ? m.last_rx_time : \"-\";\nconst ppm = (typeof m.pkts_last_min === \"number\") ? m.pkts_last_min : 0;\n\nconst out1 = { payload: (rssi !== null) ? `${rssi} dBm` : \"-\" };\nconst out2 = { payload: (snr !== null) ? `${snr} dB` : \"-\" };\nconst out3 = { payload: `${last}` };\nconst out4 = { payload: `${ppm}` };\n\n// Gauge wants a NUMBER payload\nconst out5 = { payload: (rssi !== null) ? rssi : -120 };\n\nreturn [[out1], [out2], [out3], [out4], [out5]];\n",
+        "outputs": 5,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 1500,
+        "wires": [
+            [
+                "331884f7ac7c9b83"
+            ],
+            [
+                "94f739724d3d616b"
+            ],
+            [
+                "45df56dd98cfee40"
+            ],
+            [
+                "497096177f76b23a"
+            ],
+            [
+                "87e7006ae37931f6"
+            ]
+        ]
+    },
+    {
+        "id": "dbe9b5b0d3cbff0f",
+        "type": "ui-group",
+        "name": "Health",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": "4",
+        "order": 7,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "b958611408cc2f87",
+        "type": "ui-group",
+        "name": "Latest Packet",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": "2",
+        "order": 8,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "9a508456c559f490",
+        "type": "ui-group",
+        "name": "Temperatures",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": "3",
+        "order": 6,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "212c5b96d5d840fe",
+        "type": "ui-group",
+        "name": "Commands",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 5,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "f7785d1bfe70bf9b",
+        "type": "ui-group",
+        "name": "Command History",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "6064a4dd27885d05",
+        "type": "ui-group",
+        "name": "Retry/Timeout Monitor",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "6aa2b3a71ba47db6",
+        "type": "ui-group",
+        "name": "Connection & Radio",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "6094c7562f963862",
+        "type": "ui-group",
+        "name": "Link Metrics",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "68ae68e50394a28b",
+        "type": "ui-page",
+        "name": "Telemetry ",
+        "ui": "f1fc09a09fb53cbd",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "7e699753d9e9c028",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": true,
+        "disabled": false
+    },
+    {
+        "id": "f1fc09a09fb53cbd",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "7e699753d9e9c028",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "dd5a6f825177d90e",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.1"
+        }
+    }
+]
