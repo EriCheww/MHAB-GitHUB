@@ -198,9 +198,15 @@ int main() {
             if (imgX < 0 || imgX >= width || imgY < 0 || imgY >= height)
                 continue;
 
-            int srcX = sx * sunW / sunSize;
-            int srcY = sy * sunH / sunSize;
+            int sunMin = std::min(sunW, sunH);
+            int xOffset = (sunW - sunMin) / 2;
+            int yOffset = (sunH - sunMin) / 2;
+
+            int srcX = xOffset + (sx * sunMin) / sunSize;
+            int srcY = yOffset + (sy * sunMin) / sunSize;
+
             int sidx = (srcY * sunW + srcX) * 4;
+
 
             unsigned char r = sunImg[sidx + 0];
             unsigned char g = sunImg[sidx + 1];

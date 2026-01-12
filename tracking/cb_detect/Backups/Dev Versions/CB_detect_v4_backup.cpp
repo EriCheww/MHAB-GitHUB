@@ -18,7 +18,7 @@ constexpr float R_STEP = 1.0f;
 constexpr int MIN_ALG_PT_NEEDED = 20;
 
 // curvature filtering
-constexpr int   CURVATURE_K = 5;
+constexpr int CURVATURE_K = 5;
 constexpr float CURVATURE_MIN_ANGLE = 0.25f; 
 constexpr double MAX_RMS_RADIAL_ERROR_PX = 2.0;
 constexpr int MIN_ARC_PTS = 6;
@@ -193,8 +193,7 @@ double computeRmsError(
 
 
 
-// geometric fit
-double solveCenterFixedRadius(
+double geometricCirclFitFixedRadius(
     const std::vector<cv::Point2f>& pts,
     float R,
     cv::Point2f& center
@@ -256,7 +255,7 @@ bool fitCircleRadiusRange(
 
     for (float R = R_MIN; R <= R_MAX; R += R_STEP) {
         cv::Point2f c;
-        double err = solveCenterFixedRadius(arcPts, R, c);
+        double err = geometricCirclFitFixedRadius(arcPts, R, c);
 
         if (err < bestErr) {
             bestErr = err;
