@@ -130,6 +130,12 @@ int main()
     std::unordered_map<BlockType, int> blockCount;
     std::unordered_map<BlockType, int> blockFailures;
 
+    // -------- METHOD STATS --------
+    int algCount = 0, ranCount = 0;
+    double algRmsSum = 0, ranRmsSum = 0;
+    double algCenterErrSum = 0, ranCenterErrSum = 0;
+    double algTimeSum = 0, ranTimeSum = 0;
+
     // ---------------- PROCESS DATASET ----------------
     for (int i = 1; i <= NUM_IMAGES; ++i) {
 
@@ -219,6 +225,18 @@ int main()
             rmsSum += res.rms;
             rmsCount++;
 
+            if (res.usedAlgebraic) {
+                algCount++;
+                algRmsSum += res.rms;
+                algCenterErrSum += centerErrorPx;
+                algTimeSum += timeMs;
+            } else {
+                ranCount++;
+                ranRmsSum += res.rms;
+                ranCenterErrSum += centerErrorPx;
+                ranTimeSum += timeMs;
+            }
+
             if (res.rms > RMS_THRESHOLD) {
                 bad = true;
                 failures << sid << " (high_rms=" << res.rms << ")\n";
@@ -275,6 +293,22 @@ int main()
         std::cout << "  Avg: " << (timeSum / timeCount) << "\n";
         std::cout << "  Min: " << timeMin << "\n";
         std::cout << "  Max: " << timeMax << "\n";
+    }
+
+    if (algCount > 0) {
+        std::cout << "\nAlgebraic:\n";
+        std::cout << "  Count: " << algCount << "\n";
+        std::cout << "  Avg RMS: " << algRmsSum / algCount << "\n";
+        std::cout << "  Avg center err: " << algCenterErrSum / algCount << " px\n";
+        std::cout << "  Avg time: " << algTimeSum / algCount << " ms\n";
+    }
+
+    if (ranCount > 0) {
+        std::cout << "\nRANSAC:\n";
+        std::cout << "  Count: " << ranCount << "\n";
+        std::cout << "  Avg RMS: " << ranRmsSum / ranCount << "\n";
+        std::cout << "  Avg center err: " << ranCenterErrSum / ranCount << " px\n";
+        std::cout << "  Avg time: " << ranTimeSum / ranCount << " ms\n";
     }
 
     std::cout << "\nFailures by block type:\n";
