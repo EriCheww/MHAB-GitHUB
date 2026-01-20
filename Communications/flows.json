@@ -8,6 +8,193 @@
         "env": []
     },
     {
+        "id": "f1fc09a09fb53cbd",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "7e699753d9e9c028",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "68ae68e50394a28b",
+        "type": "ui-page",
+        "name": "Telemetry ",
+        "ui": "f1fc09a09fb53cbd",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "7e699753d9e9c028",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": true,
+        "disabled": false
+    },
+    {
+        "id": "dbe9b5b0d3cbff0f",
+        "type": "ui-group",
+        "name": "Health",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": "4",
+        "order": 7,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "b958611408cc2f87",
+        "type": "ui-group",
+        "name": "Latest Packet",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": "2",
+        "order": 8,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "9a508456c559f490",
+        "type": "ui-group",
+        "name": "Temperatures",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": "3",
+        "order": 6,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "212c5b96d5d840fe",
+        "type": "ui-group",
+        "name": "Commands",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 5,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "f7785d1bfe70bf9b",
+        "type": "ui-group",
+        "name": "Command History",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "6064a4dd27885d05",
+        "type": "ui-group",
+        "name": "Retry/Timeout Monitor",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "6aa2b3a71ba47db6",
+        "type": "ui-group",
+        "name": "Connection & Radio",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "6094c7562f963862",
+        "type": "ui-group",
+        "name": "Link Metrics",
+        "page": "68ae68e50394a28b",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
         "id": "b22a16f1eabb8374",
         "type": "inject",
         "z": "ebf5a8a51a479aee",
@@ -1368,194 +1555,7 @@
         ]
     },
     {
-        "id": "dbe9b5b0d3cbff0f",
-        "type": "ui-group",
-        "name": "Health",
-        "page": "68ae68e50394a28b",
-        "width": 6,
-        "height": "4",
-        "order": 7,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "b958611408cc2f87",
-        "type": "ui-group",
-        "name": "Latest Packet",
-        "page": "68ae68e50394a28b",
-        "width": 6,
-        "height": "2",
-        "order": 8,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "9a508456c559f490",
-        "type": "ui-group",
-        "name": "Temperatures",
-        "page": "68ae68e50394a28b",
-        "width": 6,
-        "height": "3",
-        "order": 6,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "212c5b96d5d840fe",
-        "type": "ui-group",
-        "name": "Commands",
-        "page": "68ae68e50394a28b",
-        "width": 6,
-        "height": 1,
-        "order": 5,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "f7785d1bfe70bf9b",
-        "type": "ui-group",
-        "name": "Command History",
-        "page": "68ae68e50394a28b",
-        "width": 6,
-        "height": 1,
-        "order": 4,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "6064a4dd27885d05",
-        "type": "ui-group",
-        "name": "Retry/Timeout Monitor",
-        "page": "68ae68e50394a28b",
-        "width": 6,
-        "height": 1,
-        "order": 3,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "6aa2b3a71ba47db6",
-        "type": "ui-group",
-        "name": "Connection & Radio",
-        "page": "68ae68e50394a28b",
-        "width": 6,
-        "height": 1,
-        "order": 2,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "6094c7562f963862",
-        "type": "ui-group",
-        "name": "Link Metrics",
-        "page": "68ae68e50394a28b",
-        "width": 6,
-        "height": 1,
-        "order": 1,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "68ae68e50394a28b",
-        "type": "ui-page",
-        "name": "Telemetry ",
-        "ui": "f1fc09a09fb53cbd",
-        "path": "/page1",
-        "icon": "home",
-        "layout": "grid",
-        "theme": "7e699753d9e9c028",
-        "breakpoints": [
-            {
-                "name": "Default",
-                "px": "0",
-                "cols": "3"
-            },
-            {
-                "name": "Tablet",
-                "px": "576",
-                "cols": "6"
-            },
-            {
-                "name": "Small Desktop",
-                "px": "768",
-                "cols": "9"
-            },
-            {
-                "name": "Desktop",
-                "px": "1024",
-                "cols": "12"
-            }
-        ],
-        "order": 1,
-        "className": "",
-        "visible": true,
-        "disabled": false
-    },
-    {
-        "id": "f1fc09a09fb53cbd",
-        "type": "ui-base",
-        "name": "My Dashboard",
-        "path": "/dashboard",
-        "appIcon": "",
-        "includeClientData": true,
-        "acceptsClientConfig": [
-            "ui-notification",
-            "ui-control"
-        ],
-        "showPathInSidebar": false,
-        "headerContent": "page",
-        "navigationStyle": "default",
-        "titleBarStyle": "default",
-        "showReconnectNotification": true,
-        "notificationDisplayTime": 1,
-        "showDisconnectNotification": true,
-        "allowInstall": false
-    },
-    {
-        "id": "7e699753d9e9c028",
-        "type": "ui-theme",
-        "name": "Default Theme",
-        "colors": {
-            "surface": "#ffffff",
-            "primary": "#0094CE",
-            "bgPage": "#eeeeee",
-            "groupBg": "#ffffff",
-            "groupOutline": "#cccccc"
-        },
-        "sizes": {
-            "density": "default",
-            "pagePadding": "12px",
-            "groupGap": "12px",
-            "groupBorderRadius": "4px",
-            "widgetGap": "12px"
-        }
-    },
-    {
-        "id": "dd5a6f825177d90e",
+        "id": "f8874009729264ea",
         "type": "global-config",
         "env": [],
         "modules": {
