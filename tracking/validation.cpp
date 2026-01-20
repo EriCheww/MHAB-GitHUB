@@ -5,8 +5,9 @@
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <unordered_map>
 
-#include "cb_detect/CB_detect_v5_export.h"
+#include "cb_detect/CB_detect_v6_export.h"
 
 // ================= CONFIG =================
 const std::string IMAGE_DIR = "image_generation/output/images/";
@@ -17,6 +18,7 @@ const float CENTER_ERR_THRESHOLD_UPPER = 6.0f;
 const float CENTER_ERR_THRESHOLD_LOWER = 4.0f;
 
 // ================= HELPERS =================
+
 std::vector<std::string> loadFailureIDs()
 {
     std::vector<std::string> ids;
@@ -55,6 +57,73 @@ std::vector<std::string> loadHighCenterErrorIDs(float lower, float upper)
     return ids;
 }
 
+// Load full failure reason per ID
+std::unordered_map<std::string, std::string> loadFailureReasons()
+{
+    std::unordered_map<std::string, std::string> map;
+    std::ifstream f(FAIL_FILE);
+    std::string line;
+
+    while (std::getline(f, line)) {
+        if (line.size() < 4)
+            continue;
+
+        std::string id = line.substr(0, 3);
+        std::string reason = line.substr(3);
+
+        map[id] = reason;
+    }
+
+    return map;
+}
+
+void drawFailureText(
+    cv::Mat& img,
+    const std::string& id,
+    const std::string& reason
+) {
+    const int font = cv::FONT_HERSHEY_SIMPLEX;
+    const double scale = 1.2;   // 🔼 larger text
+    const int thickness = 3;
+
+    std::string line1 = "ID: " + id;
+    std::string line2 = "FAIL: " + reason;
+
+    int baseline1 = 0, baseline2 = 0;
+    cv::Size size1 = cv::getTextSize(line1, font, scale, thickness, &baseline1);
+    cv::Size size2 = cv::getTextSize(line2, font, scale, thickness, &baseline2);
+
+    int width  = std::max(size1.width, size2.width) + 30;
+    int height = size1.height + size2.height + baseline1 + baseline2 + 40;
+
+    cv::Rect bg(10, 10, width, height);
+
+    // Background box
+    cv::rectangle(img, bg, cv::Scalar(0, 0, 0), cv::FILLED);
+
+    // Text lines
+    cv::putText(
+        img,
+        line1,
+        cv::Point(20, 20 + size1.height),
+        font,
+        scale,
+        cv::Scalar(0, 255, 255), // yellow
+        thickness
+    );
+
+    cv::putText(
+        img,
+        line2,
+        cv::Point(20, 30 + size1.height + size2.height),
+        font,
+        scale,
+        cv::Scalar(0, 0, 255), // red
+        thickness
+    );
+}
+
+
 void drawResult(
     const cv::Mat& imageGray,
     const cb_detect::CircleDetectResult& res
@@ -81,6 +150,7 @@ void drawResult(
 }
 
 // ================= MAIN =================
+
 int main()
 {
     std::cout << "Select mode:\n";
@@ -98,15 +168,22 @@ int main()
         std::cout << "Loaded " << ids.size() << " failure cases\n";
     }
     else if (mode == 2) {
-        ids = loadHighCenterErrorIDs(CENTER_ERR_THRESHOLD_LOWER, CENTER_ERR_THRESHOLD_UPPER);
+        ids = loadHighCenterErrorIDs(
+            CENTER_ERR_THRESHOLD_LOWER,
+            CENTER_ERR_THRESHOLD_UPPER
+        );
         std::cout << "Loaded " << ids.size()
-                  << " cases with center_error_px > "
-                  << CENTER_ERR_THRESHOLD_LOWER << "and" << CENTER_ERR_THRESHOLD_UPPER << "\n";
+                  << " cases with center_error_px between "
+                  << CENTER_ERR_THRESHOLD_LOWER << " and "
+                  << CENTER_ERR_THRESHOLD_UPPER << "\n";
     }
     else {
         std::cerr << "Invalid mode\n";
         return 1;
     }
+
+    // Load failure reasons once
+    auto failureReasons = loadFailureReasons();
 
     cb_detect::CircleDetectParams params;
 
@@ -129,9 +206,21 @@ int main()
         );
 
         std::cout << "\n[" << ids[i] << "] ";
+
         if (!found) {
             std::cout << "Detection FAILED\n";
-            cv::imshow("Validation Viewer", image);
+
+            cv::Mat out;
+            cv::cvtColor(image, out, cv::COLOR_GRAY2BGR);
+
+            auto it = failureReasons.find(ids[i]);
+            if (it != failureReasons.end()) {
+                drawFailureText(out, ids[i], it->second);
+            } else {
+                drawFailureText(out, ids[i], "UnknownFailure");
+            }
+
+            cv::imshow("Validation Viewer", out);
         }
         else {
             std::cout << "RMS=" << res.rms
@@ -141,7 +230,7 @@ int main()
         }
 
         int key = cv::waitKey(0);
-        if (key == 27) break; // ESC to quit
+        if (key == 27) break; // ESC
     }
 
     cv::destroyAllWindows();

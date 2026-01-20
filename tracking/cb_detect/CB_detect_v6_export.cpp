@@ -1,5 +1,5 @@
 #define CB_DETECT_EXPORTS
-#include "CB_detect_v5_export.h"
+#include "CB_detect_v6_export.h"
 
 #include <vector>
 #include <cmath>
@@ -45,6 +45,66 @@ static void extractCurvedArcPointsBySign(
     }
 }
 
+
+static bool validateMinimumArcPoints(
+    const std::vector<cv::Point2f>& arcPts,
+    int minPts
+) {
+    return (int)arcPts.size() >= minPts;
+}
+
+
+static bool validateSpatialSpread(
+    const std::vector<cv::Point2f>& pts,
+    float minSpanPx
+) {
+    if (pts.size() < 2)
+        return false;
+
+    float minX = pts[0].x, maxX = pts[0].x;
+    float minY = pts[0].y, maxY = pts[0].y;
+
+    for (const auto& p : pts) {
+        minX = std::min(minX, p.x);
+        maxX = std::max(maxX, p.x);
+        minY = std::min(minY, p.y);
+        maxY = std::max(maxY, p.y);
+    }
+
+    float width  = maxX - minX;
+    float height = maxY - minY;
+
+    return (width >= minSpanPx) || (height >= minSpanPx);
+}
+
+
+static bool validateRadialConsistency(
+    const std::vector<cv::Point2f>& pts,
+    const cv::Point2f& center,
+    float radius,
+    float maxOutlierPercent
+) {
+    const size_t n = pts.size();
+    if (n == 0) return false;
+
+    const int maxBad = std::max(1, int(maxOutlierPercent * n));
+    int badCount = 0;
+
+    // Use RMS-derived adaptive threshold
+    const float adaptiveErr = std::max(8.0f, 2.5f * radius * 1e-3f);
+    const float errSq = adaptiveErr * adaptiveErr;
+
+    for (const auto& p : pts) {
+        float e = cv::norm(p - center) - radius;
+        if (e * e > errSq) {
+            if (++badCount > maxBad)
+                return false;
+        }
+    }
+    return true;
+}
+
+
 static double computeRmsError(
     const std::vector<cv::Point2f>& pts,
     const cv::Point2f& center,
@@ -58,6 +118,7 @@ static double computeRmsError(
     }
     return std::sqrt(err / pts.size());
 }
+
 
 static bool algebraicCircleFit(
     const std::vector<cv::Point2f>& pts,
@@ -178,12 +239,19 @@ bool detectCircle(
     const CircleDetectParams& params,
     Mode mode
 ) {
-    if (image.empty()) return false;
+    if (image.empty()) {
+        result.rejectReason = CircleRejectReason::EmptyImage;
+        return false;
+    } 
 
     // CONTOUR EXTRACTION
     std::vector<std::vector<cv::Point>> contours;
     cv::findContours(image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    if (contours.empty()) return false;
+    
+    if (contours.empty()) {
+        result.rejectReason = CircleRejectReason::NoContours;
+        return false;
+    } 
 
     auto& contour = *std::max_element(
         contours.begin(), contours.end(),
@@ -203,10 +271,19 @@ bool detectCircle(
         result.arcUsed = arcPts;
     }
 
-    if (arcPts.empty()) return false;
-
+    // ARC POINT VALIDATION
+    if (!detail::validateMinimumArcPoints(arcPts, params.minArcPts)) {
+        result.rejectReason = CircleRejectReason::InsufficientArcPoints;
+        return false;
+    }
+    
+    if (!detail::validateSpatialSpread(arcPts, params.minSpatialSpanPx)) {
+        result.rejectReason = CircleRejectReason::InsufficientSpatialSpread;
+        return false;
+    }
+    
     // CIRCLE FIT
-    bool ok = false;
+    bool fitOk = false;
     result.usedAlgebraic = false;
 
     if (detail::algebraicCircleFit(arcPts, params, result.center, result.radius)) {
@@ -216,20 +293,25 @@ bool detectCircle(
 
         if (result.rms < params.algMaxRms) {
             result.usedAlgebraic = true;
-            ok = true;
+            fitOk = true;
         }
     }
 
-    if (!ok) {
-        ok = detail::ransacCircleFit(
-            arcPts,
-            params,
-            result.center,
-            result.radius,
-            result.rms
-        );
+    if (!fitOk) {
+        fitOk = detail::ransacCircleFit(arcPts, params, result.center, result.radius, result.rms);
+    }
+    
+    if (!fitOk) {
+        result.rejectReason = CircleRejectReason::FitFailed;
+        return false;
     }
 
-    return ok;
+    // FIT VALIDATION
+    if (!detail::validateRadialConsistency(arcPts, result.center, result.radius, params.maxOutlierPercent)) {
+        result.rejectReason = CircleRejectReason::RadialInconsistency;
+        return false;
+    }
+
+    return true;
 }
 }

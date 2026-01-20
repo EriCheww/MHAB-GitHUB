@@ -8,7 +8,7 @@
 #include <cmath>
 #include <limits>
 
-#include "cb_detect/CB_detect_v5_export.h"
+#include "cb_detect/CB_detect_v6_export.h"
 
 // ================= BLOCK TYPE =================
 enum class BlockType {
@@ -27,6 +27,19 @@ BlockType parseBlockType(const std::string& s) {
     if (s == "ELLIPSE") return BlockType::ELLIPSE;
     if (s == "SQUARE") return BlockType::SQUARE;
     return BlockType::UNKNOWN;
+}
+
+const char* toString(cb_detect::CircleRejectReason r) {
+    switch (r) {
+        case cb_detect::CircleRejectReason::None:                    return "None";
+        case cb_detect::CircleRejectReason::EmptyImage:              return "EmptyImage";
+        case cb_detect::CircleRejectReason::NoContours:              return "NoContours";
+        case cb_detect::CircleRejectReason::InsufficientArcPoints:   return "InsufficientArcPoints";
+        case cb_detect::CircleRejectReason::InsufficientSpatialSpread:return "InsufficientSpatialSpread";
+        case cb_detect::CircleRejectReason::FitFailed:               return "FitFailed";
+        case cb_detect::CircleRejectReason::RadialInconsistency:     return "RadialInconsistency";
+        default:                                         return "Unknown";
+    }
 }
 
 std::string blockTypeName(BlockType t) {
@@ -199,7 +212,7 @@ int main()
 
         if (!found) {
             bad = true;
-            failures << sid << " (detect_failed)\n";
+            failures << sid << toString(res.rejectReason) << "\n";
         }
         else {
             if (gtMap.count(sid)) {

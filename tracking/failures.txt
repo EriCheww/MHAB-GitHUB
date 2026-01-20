@@ -1,84 +1,84 @@
-012 (detect_failed)
-019 (detect_failed)
-020 (detect_failed)
-043 (detect_failed)
-052 (detect_failed)
-063 (detect_failed)
-067 (detect_failed)
-074 (detect_failed)
-081 (detect_failed)
-099 (detect_failed)
-115 (detect_failed)
-125 (detect_failed)
-129 (detect_failed)
-168 (detect_failed)
-187 (detect_failed)
-190 (detect_failed)
-192 (detect_failed)
-197 (detect_failed)
-212 (detect_failed)
-226 (detect_failed)
-234 (detect_failed)
-263 (detect_failed)
-264 (detect_failed)
-281 (detect_failed)
-299 (detect_failed)
-300 (detect_failed)
-303 (detect_failed)
-304 (detect_failed)
-309 (detect_failed)
-312 (detect_failed)
-319 (detect_failed)
-329 (detect_failed)
-337 (detect_failed)
-348 (detect_failed)
-360 (detect_failed)
-369 (detect_failed)
-381 (detect_failed)
-385 (detect_failed)
-399 (detect_failed)
-403 (detect_failed)
-410 (detect_failed)
-443 (detect_failed)
-456 (detect_failed)
-463 (detect_failed)
-467 (detect_failed)
-497 (detect_failed)
-512 (detect_failed)
-514 (detect_failed)
-515 (detect_failed)
-520 (detect_failed)
-521 (detect_failed)
-533 (detect_failed)
-537 (detect_failed)
-547 (detect_failed)
-557 (detect_failed)
-575 (detect_failed)
-582 (detect_failed)
-587 (detect_failed)
-610 (detect_failed)
-613 (detect_failed)
-615 (detect_failed)
-626 (detect_failed)
-631 (detect_failed)
-646 (detect_failed)
-652 (detect_failed)
-666 (detect_failed)
-721 (detect_failed)
-735 (detect_failed)
-736 (detect_failed)
-748 (detect_failed)
-761 (detect_failed)
-772 (detect_failed)
-773 (detect_failed)
-785 (detect_failed)
-825 (detect_failed)
-850 (detect_failed)
-860 (detect_failed)
-868 (detect_failed)
-876 (detect_failed)
-895 (detect_failed)
-958 (detect_failed)
-985 (detect_failed)
-986 (detect_failed)
-988 (detect_failed)
+012NoContours
+019NoContours
+020NoContours
+043NoContours
+052FitFailed
+063InsufficientArcPoints
+067NoContours
+074NoContours
+081InsufficientArcPoints
+099NoContours
+115NoContours
+125NoContours
+129NoContours
+168NoContours
+187NoContours
+190NoContours
+192NoContours
+197NoContours
+212NoContours
+226FitFailed
+234NoContours
+263NoContours
+264NoContours
+281NoContours
+299NoContours
+300NoContours
+303NoContours
+304NoContours
+309NoContours
+312NoContours
+319NoContours
+329NoContours
+337NoContours
+348NoContours
+360NoContours
+369NoContours
+381NoContours
+385NoContours
+399NoContours
+403NoContours
+410InsufficientArcPoints
+443NoContours
+456NoContours
+463NoContours
+467NoContours
+497NoContours
+512NoContours
+514NoContours
+515NoContours
+520NoContours
+521NoContours
+533NoContours
+537NoContours
+547NoContours
+557NoContours
+575NoContours
+582NoContours
+587NoContours
+610NoContours
+613NoContours
+615NoContours
+626NoContours
+631NoContours
+646NoContours
+652NoContours
+666NoContours
+721NoContours
+735NoContours
+736NoContours
+748NoContours
+761NoContours
+772NoContours
+773NoContours
+785NoContours
+825NoContours
+850NoContours
+860NoContours
+868NoContours
+876NoContours
+895NoContours
+958NoContours
+985NoContours
+986NoContours
+988NoContours

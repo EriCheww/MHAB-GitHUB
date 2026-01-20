@@ -104,6 +104,49 @@ void applyBlock(
     }
 }
 
+// apply motionblur
+void applyMotionBlur(
+    std::vector<unsigned char>& image,
+    int width,
+    int height,
+    float angleDeg,
+    int strength
+) {
+    if (strength <= 1)
+        return;
+
+    std::vector<unsigned char> original = image;
+
+    float angle = angleDeg * float(M_PI) / 180.0f;
+    float dx = std::cos(angle);
+    float dy = std::sin(angle);
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+
+            float r = 0, g = 0, b = 0;
+            int samples = 0;
+
+            for (int i = -strength; i <= strength; ++i) {
+                // Clamp coordinates to image edges to avoid cutting off blur
+                int sx = std::clamp(int(x + dx * i), 0, width - 1);
+                int sy = std::clamp(int(y + dy * i), 0, height - 1);
+
+                int idx = (sy * width + sx) * 3;
+                r += original[idx + 0];
+                g += original[idx + 1];
+                b += original[idx + 2];
+                samples++;
+            }
+
+            int didx = (y * width + x) * 3;
+            image[didx + 0] = static_cast<unsigned char>(r / samples);
+            image[didx + 1] = static_cast<unsigned char>(g / samples);
+            image[didx + 2] = static_cast<unsigned char>(b / samples);
+        }
+    }
+}
+
 
 
 int main() {
@@ -163,6 +206,14 @@ int main() {
         std::cout << "Rotation (deg): ";
         std::cin >> rotationDeg;
     }
+
+    int blurStrength;
+    float blurAngle;
+
+    std::cout << "Motion blur strength (0 = none, rec 8-20): ";
+    std::cin >> blurStrength;
+    std::cout << "Motion blur angle (deg), determines the direction of the smear: ";
+    std::cin >> blurAngle;
 
     std::vector<unsigned char> image(width * height * 3, 0);
     std::vector<bool> sunMask(width * height, false);
@@ -234,6 +285,14 @@ int main() {
         offsetPercent,
         sizeA, sizeB,
         rotationDeg
+    );
+
+    applyMotionBlur(
+        image,
+        width,
+        height,
+        blurAngle,
+        blurStrength
     );
 
     int totalPixels = width * height;

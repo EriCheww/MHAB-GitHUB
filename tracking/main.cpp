@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
-#include "cb_detect/CB_detect_v5_export.h"
+#include "cb_detect/CB_detect_v6_export.h"
 
 
 int main(int argc, char** argv)
