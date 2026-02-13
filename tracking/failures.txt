@@ -1,16 +1,21 @@
+004 (high_rms=7.30038)
 012NoContours
 019NoContours
 020NoContours
+028 (high_rms=17.0184)
 043NoContours
 052FitFailed
 063InsufficientArcPoints
 067NoContours
 074NoContours
+075 (high_rms=9.11456)
 081InsufficientArcPoints
 099NoContours
 115NoContours
 125NoContours
+128 (high_rms=12.0961)
 129NoContours
+145 (high_rms=18.9512)
 168NoContours
 187NoContours
 190NoContours
@@ -19,9 +24,12 @@
 212NoContours
 226FitFailed
 234NoContours
+242 (high_rms=15.5627)
+244 (high_rms=5.00124)
 263NoContours
 264NoContours
 281NoContours
+292 (high_rms=5.25997)
 299NoContours
 300NoContours
 303NoContours
@@ -39,11 +47,15 @@
 399NoContours
 403NoContours
 410InsufficientArcPoints
+428 (high_rms=21.7595)
 443NoContours
+452 (high_rms=20.0676)
 456NoContours
 463NoContours
 467NoContours
+469 (high_rms=20.6214)
 497NoContours
+508 (high_rms=11.8181)
 512NoContours
 514NoContours
 515NoContours
@@ -53,17 +65,23 @@
 537NoContours
 547NoContours
 557NoContours
+564 (high_rms=16.0461)
+572 (high_rms=13.767)
 575NoContours
 582NoContours
 587NoContours
 610NoContours
 613NoContours
 615NoContours
+624 (high_rms=6.66228)
 626NoContours
 631NoContours
+644 (high_rms=21.3893)
 646NoContours
 652NoContours
+660 (high_rms=21.8016)
 666NoContours
+685 (high_rms=15.8378)
 721NoContours
 735NoContours
 736NoContours
@@ -72,13 +90,16 @@
 772NoContours
 773NoContours
 785NoContours
+819 (high_rms=28.4719)
 825NoContours
 850NoContours
 860NoContours
 868NoContours
 876NoContours
 895NoContours
+906 (high_rms=27.351)
 958NoContours
 985NoContours
 986NoContours
 988NoContours
+998 (high_rms=30.0068)

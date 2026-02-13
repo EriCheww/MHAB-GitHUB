@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <unordered_map>
 
-#include "cb_detect/CB_detect_v6_export.h"
+#include "cb_detect/CB_detect_v7_export.h"
 
 // ================= CONFIG =================
 const std::string IMAGE_DIR = "image_generation/output/images/";

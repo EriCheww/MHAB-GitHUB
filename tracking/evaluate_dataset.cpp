@@ -8,7 +8,7 @@
 #include <cmath>
 #include <limits>
 
-#include "cb_detect/CB_detect_v6_export.h"
+#include "cb_detect/CB_detect_v7_export.h"
 
 // ================= BLOCK TYPE =================
 enum class BlockType {
@@ -68,7 +68,7 @@ int main()
 
     const int NUM_IMAGES = 1000;
     const int BINARY_THRESHOLD = 80;
-    const float RMS_THRESHOLD = 2.0f;
+    const float RMS_THRESHOLD = 5.0f;
 
     // ---------------- LOAD METADATA ----------------
     std::unordered_map<std::string, GroundTruth> gtMap;

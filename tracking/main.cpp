@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
-#include "cb_detect/CB_detect_v6_export.h"
+#include "cb_detect/CB_detect_v7_export.h"
 
 
 int main(int argc, char** argv)
@@ -73,6 +73,7 @@ int main(int argc, char** argv)
     std::cout << "Circle detected\n";
     std::cout << "Center: (" << res.center.x << ", " << res.center.y << ")\n";
     std::cout << "Radius: " << res.radius << "\n";
+    std::cout << "Countour Area: " << res.contourArea << "\n";
     std::cout << "Detection time: " << ms << " ms\n";
     std::cout << "RMS: " << res.rms << "\n";
     std::cout << "Method: " << (res.usedAlgebraic ? "Algebraic" : "RANSAC") << "\n";
