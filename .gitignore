@@ -1,7 +1,25 @@
 # build artifacts
 *.exe
 *.obj
+*.o
+capture_system
+decoder
+test_image
 
 # runtime output
-data storage/archive/
-data storage/temp_capture/
+archive/
+temp_capture/
+decoded_frames/
+decoded_fits/
+
+# test files
+*.lz4
+*.decoded
+*.raw16
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+*.swp

@@ -53,3 +53,6 @@ CompressionResult compress_frame(const Frame& fr);
 Row write_and_enqueue(const CompressionResult& comp,
                       const std::filesystem::path& capture_dir,
                       const std::filesystem::path& archive_dir);
+
+// Main writer thread function (consumes frames, compresses, writes to disk).
+void writer_thread();
