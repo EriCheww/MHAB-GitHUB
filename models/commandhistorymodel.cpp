@@ -68,3 +68,21 @@ void CommandHistoryModel::clear()
     records.clear();
     endResetModel();
 }
+
+
+
+void CommandHistoryModel::updateRecordStatus(quint32 cmdSeq, const QString &status, const QString &result)
+{
+    for (int row = 0; row < records.size(); ++row) {
+        if (records[row].cmdSeq == cmdSeq) {
+            records[row].status = status;
+            records[row].result = result;
+
+            QModelIndex topLeft = index(row, 0);
+            QModelIndex bottomRight = index(row, columnCount() - 1);
+            emit dataChanged(topLeft, bottomRight);
+            return;
+        }
+    }
+}
+

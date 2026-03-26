@@ -19,6 +19,9 @@ public:
     void addPendingCommand(const PendingCommand &cmd);
     void clear();
 
+    void updatePendingCommand(quint32 cmdSeq, const QString &state, int retriesLeft, int timeoutRemainingS);
+    void removePendingCommand(quint32 cmdSeq);
+
 private:
     QVector<PendingCommand> commands;
 };

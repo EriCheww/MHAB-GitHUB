@@ -72,3 +72,37 @@ void PendingCommandModel::clear()
     commands.clear();
     endResetModel();
 }
+
+
+
+
+
+void PendingCommandModel::updatePendingCommand(quint32 cmdSeq, const QString &state, int retriesLeft, int timeoutRemainingS)
+{
+    for (int row = 0; row < commands.size(); ++row) {
+        if (commands[row].cmdSeq == cmdSeq) {
+            commands[row].state = state;
+            commands[row].retriesLeft = retriesLeft;
+            commands[row].timeoutRemainingS = timeoutRemainingS;
+
+            QModelIndex topLeft = index(row, 0);
+            QModelIndex bottomRight = index(row, columnCount() - 1);
+            emit dataChanged(topLeft, bottomRight);
+            return;
+        }
+    }
+}
+
+void PendingCommandModel::removePendingCommand(quint32 cmdSeq)
+{
+    for (int row = 0; row < commands.size(); ++row) {
+        if (commands[row].cmdSeq == cmdSeq) {
+            beginRemoveRows(QModelIndex(), row, row);
+            commands.removeAt(row);
+            endRemoveRows();
+            return;
+        }
+    }
+}
+
+

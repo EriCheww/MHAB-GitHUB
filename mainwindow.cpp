@@ -4,15 +4,24 @@
 #include <QString>
 #include "core/commandregistry.h"
 
-
+#include <QDateTime>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , comms(new CommunicationManager(this))
     , commandHistoryModel(new CommandHistoryModel(this))
     , pendingCommandModel(new PendingCommandModel(this))
+    , pendingCommandTimer(new QTimer(this))
 {
     ui->setupUi(this);
+    connect(ui->buttonSendCommand, &QPushButton::clicked,
+            this, &MainWindow::onSendCommandClicked);
+
+    connect(pendingCommandTimer, &QTimer::timeout,
+            this, &MainWindow::processPendingCommands);
+
+    pendingCommandTimer->start(1000);
+
     loadCommands();
     ui->tableCommandHistory->setModel(commandHistoryModel);
     ui->tablePendingCommands->setModel(pendingCommandModel);
@@ -77,11 +86,13 @@ MainWindow::MainWindow(QWidget *parent)
     cmd2.lastTx = "15:00:12";
     pendingCommandModel->addPendingCommand(cmd2);
 
-    comms->startSimulation(1000);
+    //comms->startSimulation(1000);
+
+    nextCommandSeq = 5;
 
 
-
-
+    pendingCommandCountdowns[1] = 5;
+    pendingCommandCountdowns[4] = 3;
 
 
 }
@@ -114,6 +125,97 @@ void MainWindow::loadCommands()
 
     for (const CommandDefinition &cmd : availableCommands) {
         ui->comboBoxCommand->addItem(cmd.displayName, cmd.commandKey);
+    }
+}
+
+
+
+void MainWindow::onSendCommandClicked()
+{
+    int index = ui->comboBoxCommand->currentIndex();
+
+    if (index < 0 || index >= availableCommands.size()) {
+        ui->labelCommandResult->setText("No command selected.");
+        return;
+    }
+
+    const CommandDefinition &selected = availableCommands[index];
+    QString parameterText = ui->lineEditCommandParam->text().trimmed();
+
+    QString fullCommandText = selected.commandKey;
+
+    if (selected.requiresParameter) {
+        if (parameterText.isEmpty()) {
+            ui->labelCommandResult->setText(
+                QString("Command '%1' requires a parameter.")
+                    .arg(selected.displayName)
+                );
+            return;
+        }
+        fullCommandText += " " + parameterText;
+    }
+
+    // 1. Add to Command History
+    CommandRecord record;
+    record.time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+    record.command = fullCommandText;
+    record.cmdSeq = nextCommandSeq;
+    record.status = "QUEUED";
+    record.result = "Pending send";
+    commandHistoryModel->addRecord(record);
+
+    // 2. Add to Pending Commands
+    PendingCommand cmd;
+    cmd.cmdSeq = nextCommandSeq;
+    cmd.command = fullCommandText;
+    cmd.state = "WAITING_ACK";
+    cmd.retriesLeft = selected.defaultRetries;
+    cmd.timeoutRemainingS = selected.defaultTimeoutS;
+    cmd.timeoutS = selected.defaultTimeoutS;
+    cmd.lastTx = QDateTime::currentDateTime().toString("hh:mm:ss");
+    pendingCommandModel->addPendingCommand(cmd);
+
+    // 3. Add countdown for fake ACK/timeout simulation
+    pendingCommandCountdowns[nextCommandSeq] = selected.defaultTimeoutS;
+
+    // 4. Update UI feedback
+    ui->labelCommandResult->setText(
+        QString("Queued command '%1' with CmdSeq %2")
+            .arg(fullCommandText)
+            .arg(nextCommandSeq)
+        );
+
+    // 5. Clear parameter input
+    ui->lineEditCommandParam->clear();
+
+    // 6. Increment sequence
+    nextCommandSeq++;
+}
+
+void MainWindow::processPendingCommands()
+{
+    QList<quint32> keys = pendingCommandCountdowns.keys();
+
+    for (quint32 cmdSeq : keys) {
+        int remaining = pendingCommandCountdowns.value(cmdSeq);
+        remaining--;
+
+        if (remaining > 0) {
+            pendingCommandCountdowns[cmdSeq] = remaining;
+            pendingCommandModel->updatePendingCommand(cmdSeq, "WAITING_ACK", 3, remaining);
+        } else {
+            // Fake simulation rule:
+            // even cmdSeq -> ACKED
+            // odd cmdSeq  -> TIMEOUT
+            if (cmdSeq % 2 == 0) {
+                commandHistoryModel->updateRecordStatus(cmdSeq, "ACKED", "Simulated ACK received");
+            } else {
+                commandHistoryModel->updateRecordStatus(cmdSeq, "TIMEOUT", "Simulated timeout");
+            }
+
+            pendingCommandModel->removePendingCommand(cmdSeq);
+            pendingCommandCountdowns.remove(cmdSeq);
+        }
     }
 }
 

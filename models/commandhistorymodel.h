@@ -19,6 +19,9 @@ public:
     void addRecord(const CommandRecord &record);
     void clear();
 
+
+    void updateRecordStatus(quint32 cmdSeq, const QString &status, const QString &result);
+
 private:
     QVector<CommandRecord> records;
 };
