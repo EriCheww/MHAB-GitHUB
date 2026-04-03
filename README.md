@@ -1,1 +1,2 @@
 # gound COM GUI
+The main priority of the ground-side software is reliable downlink handling. The system should be able to receive raw sensor packets, validate them, decode and unpacketise them, parse the sensor values, display them in the GUI, and store them for logging and analysis. If transmission errors are detected, such as a CRC failure or bit flips, the system should respond appropriately by rejecting or flagging the corrupted packet and updating the fault or alert state.
