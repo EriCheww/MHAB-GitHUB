@@ -89,6 +89,9 @@ int main()
                 if (found) {
                     recoveryStep = 0;
                     state = TrackingState::TRACKING;
+                } else { 
+                    // MOTOR CONTROLL TO ROTATE EVERYTHING 45 OR SOMETHING DEGREES TO SEARCH NEW AREA
+                    break;
                 }
 
                 break;
@@ -130,7 +133,8 @@ int main()
                         // tracking and recovery failed becuase the gondola is blocking it (gradual blocking over time), or 
                         // completely lost (suddenly disappeared). We can already do this as cb_detect returns contour area. 
                         // so we probably have too store past 20 or so results and use the area and center to determine gradual 
-                        // or sudden lost. If gradual, just power off and wait, if sudden search. 
+                        // or sudden lost. If gradual idle, if sudden search. This is because we dont want the whole telescope
+                        // spinning while the gondola is temp blocking the sun.
 
                         state = TrackingState::SEARCHING;
                     }
