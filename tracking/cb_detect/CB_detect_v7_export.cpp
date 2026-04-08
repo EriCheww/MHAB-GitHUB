@@ -261,6 +261,11 @@ bool detectCircle(
 
     result.contourArea = cv::contourArea(contour);
     
+    if (result.contourArea < params.contourAreaRange.first || result.contourArea > params.contourAreaRange.second) {
+        result.rejectReason = CircleRejectReason::ContourAreaOutOfRange;
+        return false;
+    } 
+
     // ARC POINT EXTRACTION
     std::vector<cv::Point2f> arcPos, arcNeg, arcPts;
     detail::extractCurvedArcPointsBySign(contour, params, arcPos, arcNeg);

@@ -12,6 +12,7 @@ enum class CircleRejectReason {
     None,
     EmptyImage,
     NoContours,
+    ContourAreaOutOfRange,
     InsufficientArcPoints,
     InsufficientSpatialSpread,
     FitFailed,
@@ -21,6 +22,7 @@ enum class CircleRejectReason {
 struct CircleDetectParams {
     float rMin = 100.0f;
     float rMax = 300.0f;
+    std::pair<float, float> contourAreaRange = {0.0f, 1000.0f};
 
     int curvatureK = 5;
     float curvatureMinAngle = 0.25f;
