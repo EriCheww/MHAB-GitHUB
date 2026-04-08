@@ -1,7 +1,9 @@
-#pragma once
+#ifndef COMMUNICATIONMANAGER_H
+#define COMMUNICATIONMANAGER_H
 
 #include <QObject>
 #include <QTimer>
+#include <QByteArray>
 #include "telemetryframe.h"
 
 class CommunicationManager : public QObject
@@ -14,6 +16,8 @@ public:
 
     void startSimulation(int intervalMs = 1000);
     void stopSimulation();
+    void feedRawPacket(const QByteArray& packet);
+    void feedRawBytes(const QByteArray& data);
 
 signals:
     void telemetryReceived(const TelemetryFrame& frame);
@@ -24,10 +28,17 @@ private slots:
     void generateFakeTelemetry();
 
 private:
+    void processPacket(const QByteArray& packet);
+    void extractPacketsFromBuffer();
+
     QTimer* simTimer = nullptr;
 
-    quint32 seq = 0;
+    QByteArray rxBuffer;
+
+    quint16 seq = 0;
     double battery = 12.6;
     double altitude = 0.0;
     double temperature = 22.0;
 };
+
+#endif // COMMUNICATIONMANAGER_H

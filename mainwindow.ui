@@ -32,8 +32,8 @@
       <widget class="QGroupBox" name="groupBox_3">
        <property name="geometry">
         <rect>
-         <x>9</x>
-         <y>9</y>
+         <x>40</x>
+         <y>10</y>
          <width>149</width>
          <height>144</height>
         </rect>
@@ -110,13 +110,13 @@
         </property>
        </widget>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>10</x>
          <y>200</y>
          <width>122</width>
-         <height>253</height>
+         <height>260</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -180,6 +180,84 @@
          </widget>
         </item>
        </layout>
+      </widget>
+      <widget class="QGroupBox" name="groupBoxPacketSimulator">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>320</y>
+         <width>381</width>
+         <height>161</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Packet Input Simulator</string>
+       </property>
+       <widget class="QPlainTextEdit" name="plainTextPacketBits">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>50</y>
+          <width>104</width>
+          <height>85</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="buttonParsePacketBits">
+        <property name="geometry">
+         <rect>
+          <x>250</x>
+          <y>30</y>
+          <width>96</width>
+          <height>28</height>
+         </rect>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Bermuda"/>
+        </property>
+        <property name="text">
+         <string>Parse Packet Bits</string>
+        </property>
+       </widget>
+       <widget class="QPlainTextEdit" name="plainTextPacketDecoded">
+        <property name="geometry">
+         <rect>
+          <x>150</x>
+          <y>60</y>
+          <width>104</width>
+          <height>85</height>
+         </rect>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QPlainTextEdit" name="plainTextRawPacketLog">
+        <property name="geometry">
+         <rect>
+          <x>270</x>
+          <y>60</y>
+          <width>104</width>
+          <height>85</height>
+         </rect>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="buttonGenerateExamplePacket">
+        <property name="geometry">
+         <rect>
+          <x>90</x>
+          <y>20</y>
+          <width>96</width>
+          <height>28</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Generate Example Packet</string>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>

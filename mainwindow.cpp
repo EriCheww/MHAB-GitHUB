@@ -3,9 +3,9 @@
 #include <QHeaderView>
 #include <QString>
 #include "core/commandregistry.h"
-
+#include "core/telemetryparser.h"
 #include <QDateTime>
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget *parent) // 4/9
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , comms(new CommunicationManager(this))
@@ -31,6 +31,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(comms, &CommunicationManager::statusChanged,
             this, &MainWindow::onStatusChanged);
+    connect(ui->buttonParsePacketBits, &QPushButton::clicked,
+            this, &MainWindow::onParsePacketBitsClicked);
+    connect(ui->buttonGenerateExamplePacket, &QPushButton::clicked,
+            this, &MainWindow::onGenerateExamplePacketClicked);
+    connect(comms, &CommunicationManager::rawLineReceived,
+            this, &MainWindow::onRawLineReceived);
 
     comms->startSimulation(1000);
 
@@ -220,3 +226,69 @@ void MainWindow::processPendingCommands()
 }
 
 
+
+
+void MainWindow::onParsePacketBitsClicked()
+{
+    QString inputText = ui->plainTextPacketBits->toPlainText().trimmed();
+
+    if (inputText.isEmpty()) {
+        ui->plainTextPacketDecoded->setPlainText("Packet parsing failed:\nInput is empty");
+        return;
+    }
+
+    QByteArray packetBytes;
+    QString error;
+
+    if (!TelemetryParser::textToPacketBytes(inputText, packetBytes, error)) {
+        ui->plainTextPacketDecoded->setPlainText("Packet parsing failed:\n" + error);
+        return;
+    }
+
+    QString description = TelemetryParser::describePacket(packetBytes);
+    ui->plainTextPacketDecoded->setPlainText(description);
+
+    // Feed into stream-based comms path so GUI behaves like real downlink handling
+    comms->feedRawPacket(packetBytes);
+}
+
+void MainWindow::onRawLineReceived(const QString& line)
+{
+    ui->plainTextRawPacketLog->appendPlainText(line);
+}
+
+
+
+
+void MainWindow::onGenerateExamplePacketClicked()
+{
+    TelemetryFrame frame;
+    frame.valid = true;
+    frame.sequence = 123;
+    frame.timestamp = QDateTime::currentDateTimeUtc();
+
+    frame.batteryVoltage = 12.34;
+    frame.altitude = 1520.5;
+    frame.temperature = 24.75;
+    frame.latitude = -37.9100000;
+    frame.longitude = 145.1300000;
+    frame.cpuUsage = 18.5;
+    frame.ramUsage = 42.0;
+    frame.packetErrorRate = 1.2;
+    frame.fault = false;
+    frame.faultCode = 0;
+    frame.faultText = "NONE";
+
+    QByteArray packet = TelemetryParser::buildTelemetryPacket(frame, 0x01, 0x10);
+
+
+    ui->plainTextPacketBits->setPlainText(packet.toHex(' ').toUpper());
+
+
+    ui->plainTextPacketDecoded->setPlainText(
+        "Generated valid example packet.\n\n" +
+        TelemetryParser::describePacket(packet)
+        );
+
+    statusBar()->showMessage("Valid example packet generated");
+}

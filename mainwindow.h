@@ -34,8 +34,9 @@ private slots:
     void loadCommands();
     void onSendCommandClicked();
     void processPendingCommands();
-
-
+    void onParsePacketBitsClicked();
+    void onRawLineReceived(const QString& line);
+    void onGenerateExamplePacketClicked();
 private:
     Ui::MainWindow *ui;
     CommunicationManager *comms;
