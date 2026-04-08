@@ -28,6 +28,7 @@
 - Evaluate and decide on camera type:
   - CSI vs USB
   - Hardware encoding support
+  - Prepare for worst case scenario    
 
 ---
 
