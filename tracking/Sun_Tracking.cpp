@@ -1,16 +1,17 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 #include "ROI/ROI.h"
 #include "cb_detect/CB_detect_v7_export.h"
+#include "recovery_classification/recovery_classification.h"
 
 enum class TrackingState
 {
     SEARCHING,
     TRACKING,
-    RECOVERY,
-    IDLE
+    RECOVERY
 };
 
 int main() 
@@ -18,6 +19,7 @@ int main()
     // Initilisation 
     cb_detect::CircleDetectResult results;
     cb_detect::CircleDetectParams params; // NEED TUNNING
+    recovery_classify::RecoveryClassifyParams classifyParams;
     
     cv::Mat image;
     int binaryThreshold = 80; // NEED TUNNING
@@ -32,6 +34,17 @@ int main()
     // Recovery
     std::vector<int> recoverySizes = {150, 200, 300}; // NEED TUNNING
     int recoveryStep = 0;
+    std::vector<recovery_classify::DetectionHistoryEntry> detectionHistory;
+    const int maxHistory = 15; // NEED TUNNING
+
+    recovery_classify::RecoveryMode recoveryMode = recovery_classify::RecoveryMode::UNKNOWN;
+    int gradualWaitCounter = 0;
+    const int gradualWaitLimit = 10; // NEED TUNNING
+
+    using Clock = std::chrono::steady_clock;
+    const auto startTime = Clock::now();
+
+    int frameNumber = 0;
 
     // Distance 
     int targetIndex = 0;
@@ -42,6 +55,7 @@ int main()
     };  
     
     while (true) {
+        frameNumber++;
 
         // CODE FOR GETTING IMAGE FROM CAMERA HERE
         
@@ -63,7 +77,11 @@ int main()
             }
 
             case TrackingState::RECOVERY: {
-                roiRect = roi::getROI(image, trackedCenter, recoverySizes[recoveryStep]);
+                if (recoveryMode == recovery_classify::RecoveryMode::GRADUAL_WAIT) {
+                    roiRect = roi::getROI(image, trackedCenter, recoverySizes.back());
+                } else {
+                    roiRect = roi::getROI(image, trackedCenter, recoverySizes[recoveryStep]);
+                }
                 break;
             }
         }
@@ -82,6 +100,24 @@ int main()
             results.center.x += roiRect.x;
             results.center.y += roiRect.y;
             trackedCenter = results.center;
+
+            // add only successful detection into histroy 
+            if (state == TrackingState::TRACKING) {
+                double timestampSec =
+                    std::chrono::duration<double>(Clock::now() - startTime).count();
+
+                detectionHistory.push_back({
+                    trackedCenter,
+                    static_cast<float>(results.contourArea),
+                    timestampSec,
+                    frameNumber
+                });
+
+                // keep histroy rolling
+                if (static_cast<int>(detectionHistory.size()) > maxHistory) {
+                    detectionHistory.erase(detectionHistory.begin());
+                }
+            }
         }
 
         switch (state) {
@@ -104,10 +140,19 @@ int main()
                     // condtions needed to determine if alread locked and can idle
 
                     // CODE FOR MOTOR CONTROLLS (distance as input) HERE
-                } 
-                else {
-                    // Move into recovery instead of full search
-                    recoveryStep = 0;
+                } else {
+                    recovery_classify::LossType lossType = recovery_classify::classifyLoss(detectionHistory, classifyParams);
+
+                    if (lossType == recovery_classify::LossType::GRADUAL) {
+                        recoveryMode = recovery_classify::RecoveryMode::GRADUAL_WAIT;
+                        recoveryStep = static_cast<int>(recoverySizes.size()) - 1; // jump to largest ROI
+                        gradualWaitCounter = 0;
+                    }
+                    else {
+                        recoveryMode = recovery_classify::RecoveryMode::SUDDEN_SCAN;
+                        recoveryStep = 0; // normal stepped recovery
+                    }
+
                     state = TrackingState::RECOVERY;
                 }
 
@@ -117,31 +162,31 @@ int main()
             case TrackingState::RECOVERY: {
                 if (found) {
                     recoveryStep = 0;
+                    gradualWaitCounter = 0;
+                    recoveryMode = recovery_classify::RecoveryMode::UNKNOWN;
                     state = TrackingState::TRACKING;
-                } 
+                }
                 else {
-                    recoveryStep++;
+                    if (recoveryMode == recovery_classify::RecoveryMode::GRADUAL_WAIT) {
+                        gradualWaitCounter++;
 
-                    // If failed after all steps,
-                    if (recoveryStep >= static_cast<int>(recoverySizes.size())) {
-                        recoveryStep = 0;
-                        
-                        // for now just go back to searching, but we ideally want a new idle State, for when we determine if
-                        // tracking and recovery failed becuase the gondola is blocking it (gradual blocking over time), or 
-                        // completely lost (suddenly disappeared). We can already do this as cb_detect returns contour area. 
-                        // so we probably have too store past 20 or so results and use the area and center to determine gradual 
-                        // or sudden lost. If gradual, just power off and wait, if sudden search. 
+                        if (gradualWaitCounter >= gradualWaitLimit) {
+                            gradualWaitCounter = 0;
+                            recoveryStep = 0;
+                            recoveryMode = recovery_classify::RecoveryMode::UNKNOWN;
+                            state = TrackingState::SEARCHING;
+                        }
+                    }
+                    else {
+                        recoveryStep++;
 
-                        state = TrackingState::SEARCHING;
+                        if (recoveryStep >= static_cast<int>(recoverySizes.size())) {
+                            recoveryStep = 0;
+                            recoveryMode = recovery_classify::RecoveryMode::UNKNOWN;
+                            state = TrackingState::SEARCHING;
+                        }
                     }
                 }
-
-                break;
-            }
-
-            case TrackingState::IDLE: {
-                // idle state for when sun is aligned or gradual blocking is true. Need to cut power to stepper? if thats an option
-                // power can be saved.
 
                 break;
             }
@@ -150,21 +195,11 @@ int main()
 }
 
 
-// state with idle : 
-// SEARCHING ---(if sun found)---> TRACKING
-// SEARCHING ---(if sun not found)---> SEARCHING
-// TRACKING ---(if sun found, large distance)---> TRACKING
-// TRACKING ---(if sun found, none distance)---> IDLE
-// TRACKING ---(if sun lost)---> RECOVERY
-// RECOVERY ---(determined gradual lost)---> IDLE
-// RECOVERY ---(determined sudden lost)---> SEARCHING
-// IDLE ---(taret and center distance grew too large)---> TRACKING
-// IDLE ---(sun graudally unblocked)---> TRACKING
-// IDLE ---(Max timeout reached)---> SEARCHING
 
 // state without idle : 
 // SEARCHING ---(if sun found)---> TRACKING
 // SEARCHING ---(if sun not found)---> SEARCHING
 // TRACKING ---(if sun found, large distance)---> TRACKING
-// TRACKING ---(if sun lost)---> RECOVERY
-// RECOVERY ---(determined sudden lost)---> SEARCHING
+// TRACKING ---(if sun lost, determine recovery classification)---> RECOVERY
+// RECOVERY ---(gradual loss)---> RECOVERY (wait)
+// RECOVERY ---(sudden loss)---> SEARCHING
