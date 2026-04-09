@@ -125,6 +125,9 @@ int main()
                 if (found) {
                     recoveryStep = 0;
                     state = TrackingState::TRACKING;
+                } else { 
+                    // MOTOR CONTROLL TO ROTATE EVERYTHING 45 OR SOMETHING DEGREES TO SEARCH NEW AREA
+                    break;
                 }
 
                 break;
