@@ -6,6 +6,7 @@
 #include "ROI/ROI.h"
 #include "cb_detect/CB_detect_v7_export.h"
 #include "recovery_classification/recovery_classification.h"
+#include "motor_control/MotorControls.h"
 
 enum class TrackingState
 {
@@ -41,8 +42,14 @@ int main()
     int gradualWaitCounter = 0;
     const int gradualWaitLimit = 10; // NEED TUNNING
 
+    // PID motor control (SRS-SOF-TRK-SH-010). Gains default to the
+    // preliminary Kp=1.0, Ki=0.05, Kd=0.2 estimates - a starting point for
+    // future experimental tuning, not final values.
+    motor_control::MotorControls motorControls;
+
     using Clock = std::chrono::steady_clock;
     const auto startTime = Clock::now();
+    auto lastControlTime = startTime; // used to compute dt for the PID loop
 
     int frameNumber = 0;
 
@@ -124,8 +131,13 @@ int main()
             case TrackingState::SEARCHING: {
                 if (found) {
                     recoveryStep = 0;
+                    // Fresh lock-on: clear PID state so integral/derivative
+                    // history from before the Sun was found doesn't cause a
+                    // jump once control resumes.
+                    motorControls.reset();
+                    lastControlTime = Clock::now();
                     state = TrackingState::TRACKING;
-                } else { 
+                } else {
                     // MOTOR CONTROLL TO ROTATE EVERYTHING 45 OR SOMETHING DEGREES TO SEARCH NEW AREA
                     break;
                 }
@@ -142,7 +154,17 @@ int main()
 
                     // condtions needed to determine if alread locked and can idle
 
-                    // CODE FOR MOTOR CONTROLLS (distance as input) HERE
+                    // PID control (SRS-SOF-TRK-SH-010): positional offset
+                    // (distance) is the error input, the output is the
+                    // correction command for the motor control subsystem.
+                    const auto now = Clock::now();
+                    double dt = std::chrono::duration<double>(now - lastControlTime).count();
+                    lastControlTime = now;
+
+                    motor_control::MotorCommand correction = motorControls.computeCorrection(distance, dt);
+
+                    // CODE FOR MOTOR CONTROLLS (correction as input) HERE
+                    // e.g. motorDriver.sendCommand(correction.panCorrection, correction.tiltCorrection);
                 } else {
                     recovery_classify::LossType lossType = recovery_classify::classifyLoss(detectionHistory, classifyParams);
 
@@ -167,6 +189,11 @@ int main()
                     recoveryStep = 0;
                     gradualWaitCounter = 0;
                     recoveryMode = recovery_classify::RecoveryMode::UNKNOWN;
+                    // Reacquired after recovery: clear PID state (time spent
+                    // in RECOVERY would otherwise show up as a huge dt/error
+                    // jump on the next control update).
+                    motorControls.reset();
+                    lastControlTime = Clock::now();
                     state = TrackingState::TRACKING;
                 }
                 else {
